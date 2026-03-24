@@ -19,7 +19,7 @@ def main():
                 setup_view.close()
                 main_win = MainWindow()
                 app._windows.append(main_win)
-                main_win.show()
+                main_win.showMaximized()
 
             setup_controller.setup_completed.connect(on_setup_done)
             setup_view.show()
@@ -28,7 +28,7 @@ def main():
         else:
             window = MainWindow()
             app._windows.append(window)
-            window.show()
+            window.showMaximized()
 
         sys.exit(app.exec())
 

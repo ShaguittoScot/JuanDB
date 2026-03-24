@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout,
-    QStackedWidget, QFrame, QApplication
+    QStackedWidget, QFrame, QApplication, QScrollArea
 )
 from PyQt6.QtCore import Qt
 from ui.colors import LIGHT_THEME, DARK_THEME
@@ -25,7 +25,7 @@ class MainWindow(QWidget):
         self.setGeometry(100, 100, 1100, 660)
         self.setMinimumSize(800, 500)
 
-        self.is_dark_theme = False
+        self.is_dark_theme = True
 
         self._build_ui()
         self._apply_styles()
@@ -73,6 +73,12 @@ class MainWindow(QWidget):
         self.stack = QStackedWidget()
         self.stack.setObjectName("stack")
 
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(self.stack)
+        scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        scroll_area.setStyleSheet("background-color: transparent;")
+
         self.backup_view = BackupView()
         self.backup_controller = BackupController(self.backup_view)
         
@@ -90,7 +96,7 @@ class MainWindow(QWidget):
         for v in [self.backup_view, self.import_export_view, self.security_view, self.monitor_view, view_settings]:
             self.stack.addWidget(v)
 
-        ws_layout.addWidget(self.stack)
+        ws_layout.addWidget(scroll_area)
 
         layout.addWidget(self.topbar)
         layout.addWidget(topbar_line)

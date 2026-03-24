@@ -19,16 +19,50 @@ class BackupWorker(QThread):
         except Exception as e:
             self.error.emit(str(e))
 
+class RestoreWorker(QThread):
+    finished = pyqtSignal()
+    error = pyqtSignal(str)
+    progress = pyqtSignal(str)
+
+    def __init__(self, db_name, filepaths: list):
+        super().__init__()
+        self.db_name = db_name
+        self.filepaths = filepaths
+
+    def run(self):
+        try:
+            import os
+            from services.backup_service import BackupService
+            
+            if self.db_name:
+                self.progress.emit(f"Preparando BD: {self.db_name}...")
+                BackupService.create_database_if_not_exists(self.db_name)
+                
+            for fp in self.filepaths:
+                if fp:
+                    self.progress.emit(f"Procesando: {os.path.basename(fp)}")
+                    BackupService.restore_backup(self.db_name, fp)
+            self.finished.emit()
+        except Exception as e:
+            self.error.emit(str(e))
+
 class BackupController(QObject):
     def __init__(self, view):
         super().__init__()
         self.view = view
         self.worker = None
+        self.restore_worker = None
 
         # Conectar señales de la vista
         self.view.btn_select_dir.clicked.connect(self.select_directory)
         self.view.btn_backup.clicked.connect(self.start_backup)
         self.view.btn_refresh.clicked.connect(self.load_databases)
+        
+        # Conexiones para restauración
+        self.view.btn_select_schema.clicked.connect(self.select_schema_file)
+        self.view.btn_select_data.clicked.connect(self.select_data_file)
+        self.view.btn_restore.clicked.connect(self.start_restore)
+        self.view.btn_refresh_restore.clicked.connect(self.load_databases)
 
         # Cargar datos iniciales
         self.load_databases()
@@ -49,6 +83,9 @@ class BackupController(QObject):
                 
         if valid_dbs:
             self.view.combo_db.addItems(valid_dbs)
+            self.view.combo_db_restore.clear()
+            self.view.combo_db_restore.addItem("(Ninguna - Restaurar Global)")
+            self.view.combo_db_restore.addItems(valid_dbs)
             self.view.log_message(f"{len(valid_dbs)} Bases de datos cargadas.")
         else:
             self.view.log_message("⚠ No se encontraron bases de datos o falló la conexión.")
@@ -89,3 +126,65 @@ class BackupController(QObject):
         self.view.log_message(f"❌ Error al crear la copia:\n{error_msg}")
         self.view.btn_backup.setEnabled(True)
         self.view.btn_refresh.setEnabled(True)
+
+    def select_schema_file(self):
+        file_path, _ = QFileDialog.getOpenFileName(self.view, "Seleccionar Archivo SQL (Único/Esquema)", "", "SQL Files (*.sql)")
+        if file_path:
+            self.view.schema_input.setText(file_path)
+
+    def select_data_file(self):
+        file_path, _ = QFileDialog.getOpenFileName(self.view, "Seleccionar Archivo de Datos", "", "SQL Files (*.sql)")
+        if file_path:
+            self.view.data_input.setText(file_path)
+
+    def start_restore(self):
+        db_name = self.view.combo_db_restore.currentText()
+        schema_path = self.view.schema_input.text().strip()
+        data_path = self.view.data_input.text().strip()
+        
+        is_split = self.view.combo_mode_restore.currentIndex() == 1
+
+        if not db_name:
+            self.view.log_message("❌ Error: Escriba o seleccione una BD destino (o elija 'Ninguna').")
+            return
+            
+        if db_name == "(Ninguna - Restaurar Global)":
+            db_name = None
+
+        filepaths = []
+        if is_split:
+            if schema_path: filepaths.append(schema_path)
+            if data_path: filepaths.append(data_path)
+            if not filepaths:
+                self.view.log_message("❌ Error: Seleccione al menos un archivo (Esquema o Datos) para restaurar.")
+                return
+        else:
+            if not schema_path:
+                self.view.log_message("❌ Error: Seleccione un archivo .sql para restaurar.")
+                return
+            filepaths.append(schema_path)
+
+        self.view.log_message(f"⌛ Iniciando restauración en '{db_name or 'Global'}'...")
+        self.view.log_message("Por favor, espere...")
+        self.view.btn_restore.setEnabled(False)
+        self.view.btn_refresh_restore.setEnabled(False)
+        self.view.progress_bar_restore.setRange(0, 0)
+        self.view.progress_bar_restore.setVisible(True)
+
+        self.restore_worker = RestoreWorker(db_name, filepaths)
+        self.restore_worker.progress.connect(lambda msg: self.view.log_message(f"↳ {msg}"))
+        self.restore_worker.finished.connect(self.on_restore_success)
+        self.restore_worker.error.connect(self.on_restore_error)
+        self.restore_worker.start()
+
+    def on_restore_success(self):
+        self.view.progress_bar_restore.setVisible(False)
+        self.view.log_message("✅ ¡Base de datos restaurada exitosamente!")
+        self.view.btn_restore.setEnabled(True)
+        self.view.btn_refresh_restore.setEnabled(True)
+
+    def on_restore_error(self, error_msg):
+        self.view.progress_bar_restore.setVisible(False)
+        self.view.log_message(f"❌ Error al restaurar la copia:\n{error_msg}")
+        self.view.btn_restore.setEnabled(True)
+        self.view.btn_refresh_restore.setEnabled(True)

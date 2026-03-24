@@ -45,13 +45,13 @@ class ImportExportController(QObject):
         self.view = view
         
         # Conectar señales Exp
-        self.view.combo_db_exp.currentTextChanged.connect(self.load_tables_exp)
-        self.view.btn_browse_exp.clicked.connect(self.browse_export_path)
+        self.view.db_exp.currentTextChanged.connect(self.load_tables_exp)
+        self.view.file_selector_exp.browse_btn.clicked.connect(self.browse_export_path)
         self.view.btn_export.clicked.connect(self.process_export)
         
         # Conectar señales Imp
-        self.view.combo_db_imp.currentTextChanged.connect(self.load_tables_imp)
-        self.view.btn_browse_imp.clicked.connect(self.browse_import_path)
+        self.view.db_imp.currentTextChanged.connect(self.load_tables_imp)
+        self.view.file_selector_imp.browse_btn.clicked.connect(self.browse_import_path)
         self.view.btn_import.clicked.connect(self.process_import)
         
         self.load_dbs()
@@ -63,57 +63,58 @@ class ImportExportController(QObject):
             if isinstance(db, tuple) and len(db) > 0:
                 valid_dbs.append(db[0])
                 
-        self.view.combo_db_exp.clear()
-        self.view.combo_db_imp.clear()
+        self.view.db_exp.clear()
+        self.view.db_imp.clear()
         
         if valid_dbs:
-            self.view.combo_db_exp.addItems(valid_dbs)
-            self.view.combo_db_imp.addItems(valid_dbs)
+            self.view.db_exp.addItems(valid_dbs)
+            self.view.db_imp.addItems(valid_dbs)
 
     def load_tables_exp(self, db_name):
-        self.view.combo_table_exp.clear()
+        self.view.table_exp.clear()
         if not db_name: return
         tables = get_tables(db_name)
         for tb in tables:
             if isinstance(tb, tuple) and len(tb) > 0:
-                self.view.combo_table_exp.addItem(tb[0])
+                self.view.table_exp.addItem(tb[0])
 
     def load_tables_imp(self, db_name):
-        self.view.combo_table_imp.clear()
+        self.view.table_imp.clear()
         if not db_name: return
         tables = get_tables(db_name)
         for tb in tables:
             if isinstance(tb, tuple) and len(tb) > 0:
-                self.view.combo_table_imp.addItem(tb[0])
+                self.view.table_imp.addItem(tb[0])
 
     def browse_export_path(self):
-        fmt = self.view.combo_format_exp.currentText()
+        fmt = self.view.format_exp.currentText()
         filt = "CSV files (*.csv)" if fmt == "CSV" else "JSON files (*.json)"
+        
+        # Para exportar la carpeta o archivo? En el placeholder dice "Seleccionar carpeta..." pero si el viejo era save_file_name.
+        # De igual forma getSaveFileName asume un archivo específico.
         path, _ = QFileDialog.getSaveFileName(self.view, "Guardar Archivo Exportado", "", filt)
         if path:
-            self.view.txt_path_exp.setText(path)
+            self.view.file_selector_exp.set_path(path)
 
     def browse_import_path(self):
-        fmt = self.view.combo_format_imp.currentText()
+        fmt = self.view.format_imp.currentText()
         filt = "CSV files (*.csv)" if fmt == "CSV" else "JSON files (*.json)"
         path, _ = QFileDialog.getOpenFileName(self.view, "Seleccionar Archivo para Importar", "", filt)
         if path:
-            self.view.txt_path_imp.setText(path)
+            self.view.file_selector_imp.set_path(path)
 
     def process_export(self):
-        db = self.view.combo_db_exp.currentText()
-        tb = self.view.combo_table_exp.currentText()
-        fmt = self.view.combo_format_exp.currentText()
-        path = self.view.txt_path_exp.text()
+        db = self.view.db_exp.currentText()
+        tb = self.view.table_exp.currentText()
+        fmt = self.view.format_exp.currentText()
+        path = self.view.file_selector_exp.get_path()
         
         if not all([db, tb, fmt, path]):
-            self.view.lbl_msg_exp.setText("⚠ Faltan parámetros.")
-            self.view.lbl_msg_exp.setStyleSheet("color: #FF4444;")
+            self.view.show_message("export", "⚠ Faltan parámetros.", "error")
             return
             
         self.view.btn_export.setEnabled(False)
-        self.view.lbl_msg_exp.setText("⏳ Exportando datos...")
-        self.view.lbl_msg_exp.setStyleSheet("color: #A78BFA;")
+        self.view.show_message("export", "⏳ Exportando datos...", "info")
         
         self.exp_worker = ExportWorker(db, tb, fmt, path)
         self.exp_worker.finished.connect(self.on_exp_done)
@@ -122,29 +123,25 @@ class ImportExportController(QObject):
 
     def on_exp_done(self, count):
         self.view.btn_export.setEnabled(True)
-        self.view.lbl_msg_exp.setText(f"✅ Éxito. {count} fila(s) exportadas.")
-        self.view.lbl_msg_exp.setStyleSheet("color: #10B981;")
+        self.view.show_message("export", f"✅ Éxito. {count} fila(s) exportadas.", "success")
 
     def on_exp_error(self, err):
         self.view.btn_export.setEnabled(True)
-        self.view.lbl_msg_exp.setText(f"❌ Falló exportación.")
-        self.view.lbl_msg_exp.setStyleSheet("color: #FF4444;")
+        self.view.show_message("export", f"❌ Falló exportación.", "error")
         print("Export error:", err)
 
     def process_import(self):
-        db = self.view.combo_db_imp.currentText()
-        tb = self.view.combo_table_imp.currentText()
-        fmt = self.view.combo_format_imp.currentText()
-        path = self.view.txt_path_imp.text()
+        db = self.view.db_imp.currentText()
+        tb = self.view.table_imp.currentText()
+        fmt = self.view.format_imp.currentText()
+        path = self.view.file_selector_imp.get_path()
         
         if not all([db, tb, fmt, path]):
-            self.view.lbl_msg_imp.setText("⚠ Faltan parámetros.")
-            self.view.lbl_msg_imp.setStyleSheet("color: #FF4444;")
+            self.view.show_message("import", "⚠ Faltan parámetros.", "error")
             return
             
         self.view.btn_import.setEnabled(False)
-        self.view.lbl_msg_imp.setText("⏳ Importando datos...")
-        self.view.lbl_msg_imp.setStyleSheet("color: #A78BFA;")
+        self.view.show_message("import", "⏳ Importando datos...", "info")
         
         self.imp_worker = ImportWorker(db, tb, fmt, path)
         self.imp_worker.finished.connect(self.on_imp_done)
@@ -153,11 +150,9 @@ class ImportExportController(QObject):
 
     def on_imp_done(self, count):
         self.view.btn_import.setEnabled(True)
-        self.view.lbl_msg_imp.setText(f"✅ Éxito. {count} fila(s) importadas.")
-        self.view.lbl_msg_imp.setStyleSheet("color: #10B981;")
+        self.view.show_message("import", f"✅ Éxito. {count} fila(s) importadas.", "success")
 
     def on_imp_error(self, err):
         self.view.btn_import.setEnabled(True)
-        self.view.lbl_msg_imp.setText(f"❌ Falló importación.")
-        self.view.lbl_msg_imp.setStyleSheet("color: #FF4444;")
+        self.view.show_message("import", f"❌ Falló importación.", "error")
         print("Import error:", err)

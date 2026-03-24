@@ -19,7 +19,7 @@ class SetupView(QWidget):
         header_lbl = QLabel("Bienvenido a JuanDB")
         header_lbl.setFont(QFont("Georgia", 22, QFont.Weight.Bold))
         header_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        header_lbl.setStyleSheet("color: #FF2E88;")
+        header_lbl.setProperty("class", "text-accent")
 
         desc_lbl = QLabel("Por favor, ingresa los datos de conexión al servidor y tu información de perfil. Solo te lo pediremos esta vez.")
         desc_lbl.setFont(QFont("Segoe UI", 10))
@@ -122,7 +122,7 @@ class SetupView(QWidget):
         return line_edit
 
     def show_error(self, message: str):
-        self.lbl_error.setText(f"⚠ {message}")
+        self.lbl_error.setText(f"<img src='assets/icons/warning.svg' width='14' height='14'> {message}")
 
     def clear_error(self):
         self.lbl_error.setText("")

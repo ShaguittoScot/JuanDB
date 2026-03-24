@@ -10,7 +10,7 @@ class TopBar(QFrame):
         self.setObjectName("topBar")
         self.setFixedHeight(64)
         
-        self.is_dark_theme = False
+        self.is_dark_theme = True
         self._build_ui()
 
     def _build_ui(self):
@@ -25,7 +25,7 @@ class TopBar(QFrame):
         self.breadcrumb.setObjectName("breadcrumb")
         self.breadcrumb.setFont(QFont("Courier New", 8))
 
-        self.btn_theme_toggle = QPushButton("🌙 Oscuro")
+        self.btn_theme_toggle = QPushButton("☀️ Claro")
         self.btn_theme_toggle.setObjectName("themeToggleBtn")
         self.btn_theme_toggle.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_theme_toggle.clicked.connect(self._on_theme_toggle)
