@@ -1,30 +1,30 @@
-from PyQt6.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
+from PyQt6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QPushButton
 from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, pyqtSignal
 from PyQt6.QtGui import QFont
 from services.config_service import ConfigService
+from ui.components.user_profile_widget import UserProfileWidget
 
 NAV_ITEMS = [
-    ("backup",   "Backups",       "B"),
-    ("import",   "Import / Export", "I"),
-    ("security", "Seguridad",     "S"),
-    ("monitor",  "Monitoreo",     "M"),
-    ("settings", "Configuración", "C"),
+    ("backup",   "Backups",         "⊞"),
+    ("import",   "Import / Export", "⇄"),
+    ("security", "Seguridad",       "⚿"),
+    ("monitor",  "Monitoreo",       "◎"),
+    ("settings", "Configuración",   "⚙"),
 ]
 
 class Sidebar(QFrame):
     module_selected = pyqtSignal(int, str)
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("sidebar")
-        
+
         self.sidebar_expanded = True
-        self.sidebar_width = 220
-        self.sidebar_collapsed_width = 64
+        self.sidebar_width = 210
+        self.sidebar_collapsed_width = 56
         self.setFixedWidth(self.sidebar_width)
-        
+
         self.nav_buttons = []
-        
         self._build_ui()
 
     def _build_ui(self):
@@ -32,25 +32,25 @@ class Sidebar(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # ── Cabecera ──────────────────────────────────────────────────────
+        # ── Cabecera ───────────────────────────────────────────────────
         header = QFrame()
         header.setObjectName("sidebarHeader")
-        header.setFixedHeight(64)
+        header.setFixedHeight(56)
         h_layout = QHBoxLayout(header)
-        h_layout.setContentsMargins(18, 0, 12, 0)
+        h_layout.setContentsMargins(16, 0, 12, 0)
         h_layout.setSpacing(10)
 
-        self.logo_mark = QLabel("JDB")
+        self.logo_mark = QLabel("●")
         self.logo_mark.setObjectName("logoMark")
-        self.logo_mark.setFont(QFont("Courier New", 11, QFont.Weight.Bold))
+        self.logo_mark.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
 
         self.app_title = QLabel("JuanDB")
         self.app_title.setObjectName("appTitle")
-        self.app_title.setFont(QFont("Georgia", 13, QFont.Weight.Bold))
+        self.app_title.setFont(QFont("Segoe UI", 13, QFont.Weight.DemiBold))
 
         self.btn_toggle = QPushButton("‹")
         self.btn_toggle.setObjectName("toggleBtn")
-        self.btn_toggle.setFixedSize(28, 28)
+        self.btn_toggle.setFixedSize(26, 26)
         self.btn_toggle.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_toggle.clicked.connect(self.toggle_sidebar)
 
@@ -58,105 +58,68 @@ class Sidebar(QFrame):
         h_layout.addWidget(self.app_title, 1)
         h_layout.addWidget(self.btn_toggle)
 
-        # ── Línea bajo header ─────────────────────────────────────────────
+        # ── Separador header ────────────────────────────────────────────
         top_line = QFrame()
         top_line.setObjectName("topLine")
         top_line.setFixedHeight(1)
 
-        # ── Sección de navegación ─────────────────────────────────────────
+        # ── Navegación ──────────────────────────────────────────────────
         nav_frame = QFrame()
         nav_layout = QVBoxLayout(nav_frame)
-        nav_layout.setContentsMargins(12, 20, 12, 20)
-        nav_layout.setSpacing(4)
+        nav_layout.setContentsMargins(0, 16, 0, 16)
+        nav_layout.setSpacing(2)
 
-        self.section_label = QLabel("NAVEGACIÓN")
+        self.section_label = QLabel("MENÚ")
         self.section_label.setObjectName("sectionLabel")
-        self.section_label.setFont(QFont("Courier New", 7, QFont.Weight.Bold))
+        self.section_label.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        self.section_label.setContentsMargins(16, 0, 0, 8)
         nav_layout.addWidget(self.section_label)
-        nav_layout.addSpacing(8)
 
-        for i, (key, label, abbr) in enumerate(NAV_ITEMS):
-            btn = QPushButton(f"  {label}")
+        for i, (key, label, icon) in enumerate(NAV_ITEMS):
+            btn = QPushButton(f"  {icon}   {label}")
             btn.setObjectName("navBtn")
             btn.setCheckable(True)
-            btn.setFont(QFont("Courier New", 9))
+            btn.setFont(QFont("Segoe UI", 12))
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn.setFixedHeight(40)
-            btn.setProperty("abbr", abbr)
-            btn.setProperty("full_label", label)
+            btn.setFixedHeight(36)
+            btn.setProperty("abbr", icon)
+            btn.setProperty("full_label", f"  {icon}   {label}")
             btn.clicked.connect(lambda checked, idx=i, title=label: self._on_nav_clicked(idx, title))
-            
             self.nav_buttons.append(btn)
             nav_layout.addWidget(btn)
 
         nav_layout.addStretch()
 
-        # ── Divisor ───────────────────────────────────────────────────────
-        div = QFrame()
-        div.setObjectName("divider")
-        div.setFixedHeight(1)
-
-        # ── Footer ────────────────────────────────────────────────────────
-        footer = QFrame()
-        footer.setObjectName("sidebarFooter")
-        f_layout = QHBoxLayout(footer)
-        f_layout.setContentsMargins(16, 14, 16, 14)
-        f_layout.setSpacing(10)
-
+        # ── Footer — UserProfileWidget ────────────────────────────────────
         cfg = ConfigService.load_config()
         app_user = cfg.get("app_user", "Juan")
 
         from services.db_service import get_current_user_info
-        info = get_current_user_info()
+        info    = get_current_user_info()
         db_user = info["user"]
         db_role = info["role"]
 
-        initial = app_user[0].upper() if app_user else "J"
+        self.profile_widget = UserProfileWidget(
+            name=app_user, role=db_role, db_user=db_user
+        )
+        self.profile_widget.logout_clicked.connect(self._on_logout)
 
-        avatar = QLabel(initial)
-        avatar.setObjectName("avatar")
-        avatar.setFixedSize(32, 32)
-        avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        avatar.setFont(QFont("Courier New", 11, QFont.Weight.Bold))
+        # ── Divisor ─────────────────────────────────────────────────────
+        div = QFrame()
+        div.setObjectName("divider")
+        div.setFixedHeight(1)
 
-        user_col = QVBoxLayout()
-        user_col.setSpacing(0)
-
-        self.user_name = QLabel(app_user)
-        self.user_name.setObjectName("userName")
-        self.user_name.setFont(QFont("Courier New", 9, QFont.Weight.Bold))
-
-        self.user_role = QLabel(f"{db_role} (@{db_user})")
-        self.user_role.setObjectName("userRole")
-        self.user_role.setFont(QFont("Courier New", 7))
-        
-        self.btn_logout = QPushButton("Cerrar Sesión")
-        self.btn_logout.setObjectName("btnLogout")
-        self.btn_logout.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_logout.setStyleSheet("background-color: transparent; color: #FF4444; border: none; font-size: 10px; font-weight: bold; text-align: left; margin-top: 4px;")
-        self.btn_logout.clicked.connect(self._on_logout)
-
-        user_col.addWidget(self.user_name)
-        user_col.addWidget(self.user_role)
-        user_col.addWidget(self.btn_logout)
-
-        f_layout.addWidget(avatar)
-        f_layout.addLayout(user_col)
-        f_layout.addStretch()
-
-        # ── Ensamblar sidebar ─────────────────────────────────────────────
+        # ── Ensamblar ───────────────────────────────────────────────────
         layout.addWidget(header)
         layout.addWidget(top_line)
         layout.addWidget(nav_frame, 1)
         layout.addWidget(div)
-        layout.addWidget(footer)
+        layout.addWidget(self.profile_widget)
 
     def _on_logout(self):
-        import sys
-        import os
+        import sys, os
         from services.config_service import ConfigService
         ConfigService.clear_config()
-        # Reinicia limpiamente el proceso desde el Sistema Operativo
         os.execl(sys.executable, sys.executable, *sys.argv)
 
     def _on_nav_clicked(self, index: int, title: str):
@@ -171,31 +134,29 @@ class Sidebar(QFrame):
         self.sidebar_expanded = not self.sidebar_expanded
 
         self.anim = QPropertyAnimation(self, b"minimumWidth")
-        self.anim.setDuration(250)
+        self.anim.setDuration(220)
         self.anim.setEasingCurve(QEasingCurve.Type.InOutCubic)
 
         anim2 = QPropertyAnimation(self, b"maximumWidth")
-        anim2.setDuration(250)
+        anim2.setDuration(220)
         anim2.setEasingCurve(QEasingCurve.Type.InOutCubic)
 
         if self.sidebar_expanded:
             target = self.sidebar_width
             self.btn_toggle.setText("‹")
             self.app_title.show()
-            self.user_name.show()
-            self.user_role.show()
             self.section_label.show()
+            self.profile_widget.show()
             for btn in self.nav_buttons:
-                btn.setText(f"  {btn.property('full_label')}")
+                btn.setText(btn.property("full_label"))
         else:
             target = self.sidebar_collapsed_width
             self.btn_toggle.setText("›")
             self.app_title.hide()
-            self.user_name.hide()
-            self.user_role.hide()
             self.section_label.hide()
+            self.profile_widget.hide()
             for btn in self.nav_buttons:
-                btn.setText(btn.property("abbr"))
+                btn.setText(f"  {btn.property('abbr')}")
 
         self.anim.setEndValue(target)
         anim2.setEndValue(target)

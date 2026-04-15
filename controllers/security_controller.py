@@ -81,7 +81,7 @@ class SecurityController(QObject):
         user = self.view.txt_user.text().strip()
         host = self.view.txt_host.text().strip()
         pwd = self.view.txt_pass.text().strip()
-        confirm = self.view.txt_confirm_pass.text().strip()
+        confirm = self.view.txt_confirm.text().strip()
 
         # Validaciones
         if not user:
@@ -148,9 +148,9 @@ class SecurityController(QObject):
             self.view.show_message(f"✅ {msg}", "success")
             self.view.txt_user.clear()
             self.view.txt_pass.clear()
-            self.view.txt_confirm_pass.clear()
-            self.view.chk_grant_priv.setChecked(False)
-            self.view.chk_expire_pass.setChecked(False)
+            self.view.txt_confirm.clear()
+            self.view.chk_grant.setChecked(False)
+            self.view.chk_expire.setChecked(False)
             self.load_users()
         else:
             self.view.show_message(f"❌ {msg}", "error")

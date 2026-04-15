@@ -1,291 +1,377 @@
 def get_views_style(theme: dict) -> str:
     return f"""
-        /* ── GLOBALES DE VISTAS ─────────────────────────────────── */
+        /* ── GLOBALES DE VISTAS ─────────────────────────────────────── */
         BackupView, ImportExportView, SecurityView, MonitorView {{
             background-color: transparent;
         }}
-        
-        QLabel.label {{
-            color: {theme['TEXT_MUTED']};
-            font-size: 12px;
-            font-weight: 500;
-            min-width: 100px;
-        }}
-        
-        QLabel.section-title {{
-            color: {theme['ACCENT']};
-            font-size: 13px;
-            font-weight: bold;
-            margin-top: 8px;
-        }}
-        
-        /* ── INPUTS DE VISTAS ───────────────────────────────────── */
+
+        /* ── INPUTS ─────────────────────────────────────────────────── */
         QComboBox, QLineEdit {{
-            background-color: {theme['BG_SIDEBAR2']};
+            background-color: {theme['BG_ELEVATED']};
             border: 1px solid {theme['BORDER']};
-            border-radius: 8px;
-            padding: 8px 12px;
-            color: {theme['TEXT_LIGHT']};
-            font-size: 12px;
-            min-height: 20px;
+            border-radius: 6px;
+            padding: 7px 10px;
+            color: {theme['TEXT_DARK']};
+            font-size: 13px;
+            min-height: 18px;
+            selection-background-color: {theme['ACCENT']};
         }}
-        
         QComboBox:hover, QLineEdit:hover {{
-            border-color: {theme['ACCENT']};
+            border-color: {theme['TEXT_MUTED']};
         }}
-        
         QComboBox:focus, QLineEdit:focus {{
             border-color: {theme['ACCENT']};
+            background-color: {theme['BG_SURFACE']};
         }}
-        
+        QComboBox:disabled, QLineEdit:disabled {{
+            color: {theme['TEXT_HINT']};
+            border-color: {theme['SEPARATOR']};
+        }}
         QComboBox::drop-down {{
             border: none;
-            width: 24px;
+            width: 28px;
         }}
-        
         QComboBox::down-arrow {{
             image: none;
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 5px solid {theme['TEXT_LIGHT']};
-            margin-right: 8px;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 5px solid {theme['TEXT_MUTED']};
+            margin-right: 10px;
         }}
-        
         QComboBox QAbstractItemView {{
-            background-color: {theme['BG_SIDEBAR2']};
+            background-color: {theme['BG_SURFACE']};
             border: 1px solid {theme['BORDER']};
-            selection-background-color: {theme['ACCENT']};
-            color: {theme['TEXT_LIGHT']};
+            border-radius: 6px;
+            selection-background-color: {theme['ACCENT_SOFT']};
+            selection-color: {theme['ACCENT']};
+            color: {theme['TEXT_DARK']};
+            outline: none;
+            padding: 4px;
         }}
-        
-        /* ── AGRUPACIONES (Groupbox) ────────────────────────────── */
+        QComboBox QAbstractItemView::item {{
+            padding: 6px 10px;
+            border-radius: 4px;
+        }}
+
+        /* ── GROUPBOX ────────────────────────────────────────────────── */
         QGroupBox {{
             border: 1px solid {theme['BORDER']};
-            border-radius: 12px;
-            margin-top: 12px;
-            padding-top: 12px;
-            font-weight: bold;
-            color: {theme['TEXT_LIGHT']};
+            border-radius: 8px;
+            margin-top: 16px;
+            padding: 16px 12px 12px 12px;
+            font-weight: 600;
+            font-size: 12px;
+            color: {theme['TEXT_MUTED']};
         }}
-        
         QGroupBox::title {{
             subcontrol-origin: margin;
+            subcontrol-position: top left;
             left: 12px;
-            padding: 0 8px;
+            top: -8px;
+            padding: 0 6px;
+            background-color: {theme['BG_SURFACE']};
+            color: {theme['TEXT_MUTED']};
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
         }}
-        
-        /* ── TABLAS ─────────────────────────────────────────────── */
+
+        /* ── TABLAS ──────────────────────────────────────────────────── */
         QTableWidget {{
-            background-color: {theme['BG_SIDEBAR2']};
+            background-color: {theme['BG_SURFACE']};
             border: 1px solid {theme['BORDER']};
-            border-radius: 12px;
-            color: {theme['TEXT_LIGHT']};
-            gridline-color: {theme['BORDER']};
+            border-radius: 8px;
+            color: {theme['TEXT_DARK']};
+            gridline-color: {theme['SEPARATOR']};
+            selection-background-color: {theme['ACCENT_SOFT']};
+            selection-color: {theme['TEXT_DARK']};
+            outline: none;
         }}
-        
-        QHeaderView::section {{
-            background-color: {theme['BORDER']};
-            color: {theme['TEXT_MUTED']};
-            padding: 8px;
+        QTableWidget::item {{
+            padding: 6px 10px;
             border: none;
-            font-weight: bold;
         }}
-        
-        /* ── CHECKBOX ───────────────────────────────────────────── */
-        QCheckBox {{
+        QTableWidget::item:selected {{
+            background-color: {theme['ACCENT_SOFT']};
+            color: {theme['ACCENT']};
+        }}
+        QHeaderView::section {{
+            background-color: {theme['BG_ELEVATED']};
             color: {theme['TEXT_MUTED']};
+            padding: 8px 10px;
+            border: none;
+            border-bottom: 1px solid {theme['BORDER']};
+            border-right: 1px solid {theme['SEPARATOR']};
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }}
+        QHeaderView::section:last {{
+            border-right: none;
+        }}
+
+        /* ── CHECKBOX ────────────────────────────────────────────────── */
+        QCheckBox {{
+            color: {theme['TEXT_DARK']};
+            font-size: 13px;
             spacing: 8px;
         }}
-        
         QCheckBox::indicator {{
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             border-radius: 4px;
-            border: 2px solid {theme['BORDER']};
-            background-color: {theme['BG_SIDEBAR2']};
+            border: 1px solid {theme['BORDER']};
+            background-color: {theme['BG_ELEVATED']};
         }}
-        
+        QCheckBox::indicator:hover {{
+            border-color: {theme['ACCENT']};
+        }}
         QCheckBox::indicator:checked {{
             background-color: {theme['ACCENT']};
             border-color: {theme['ACCENT']};
         }}
-        
-        /* ── PROGRESS BAR ───────────────────────────────────────── */
+        QCheckBox::indicator:checked:hover {{
+            background-color: {theme['ACCENT_DARK']};
+        }}
+
+        /* ── PROGRESS BAR ────────────────────────────────────────────── */
         QProgressBar {{
-            border: 1px solid {theme['BORDER']};
-            border-radius: 6px;
+            border: none;
+            border-radius: 3px;
             text-align: center;
-            color: {theme['TEXT_LIGHT']};
-            background-color: {theme['BG_SIDEBAR2']};
+            color: transparent;
+            background-color: {theme['BG_ELEVATED']};
+            max-height: 6px;
         }}
-        
         QProgressBar::chunk {{
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 {theme['ACCENT']}, stop:1 {theme['TEXT_MUTED']});
-            border-radius: 5px;
+            background-color: {theme['ACCENT']};
+            border-radius: 3px;
         }}
-        
-        /* ── LOG AREA (QTextEdit#logArea) ───────────────────────── */
+
+        /* ── LOG / TERMINAL AREA ─────────────────────────────────────── */
         QTextEdit#logArea {{
-            background-color: {theme['BG_SIDEBAR']};
+            background-color: {theme['BG_BASE']};
             border: 1px solid {theme['BORDER']};
-            border-radius: 12px;
-            padding: 12px;
-            font-family: 'Consolas', monospace;
-            font-size: 11px;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: 'Cascadia Code', 'Consolas', 'Fira Code', monospace;
+            font-size: 12px;
+            color: {theme['TEXT_DARK']};
         }}
-        
-        /* ── BOTONES SECUNDARIOS ────────────────────────────────── */
+
+        /* ── BOTÓN SECUNDARIO (objectName) ───────────────────────────── */
         QPushButton#btnSecondary {{
             background-color: transparent;
             border: 1px solid {theme['BORDER']};
-            border-radius: 8px;
+            border-radius: 6px;
             color: {theme['TEXT_MUTED']};
-            padding: 8px 16px;
+            padding: 6px 14px;
             font-size: 12px;
+            font-weight: 500;
         }}
-        
         QPushButton#btnSecondary:hover {{
-            background-color: {theme['BORDER']};
-            border-color: {theme['ACCENT']};
+            background-color: {theme['BG_ELEVATED']};
+            border-color: {theme['TEXT_MUTED']};
+            color: {theme['TEXT_DARK']};
         }}
-        
-        /* ── UTILITY CLASSES PARA VISTAS ──────────────────────────── */
+
+        /* ── UTILITY CLASSES ─────────────────────────────────────────── */
         .view-title {{
             color: {theme['TEXT_DARK']};
+            font-size: 22px;
+            font-weight: 700;
         }}
         .view-subtitle-accent {{
             color: {theme['ACCENT']};
+            font-size: 15px;
+            font-weight: 600;
         }}
         .view-subtitle-muted {{
-            color: {theme['TEXT_MUTED']};
+            color: {theme['TEXT_DARK']};
+            font-size: 15px;
+            font-weight: 600;
         }}
-        .text-adaptive {{ color: {theme['TEXT_DARK']}; }}
-        .text-light {{ color: {theme['TEXT_LIGHT']}; }}
-        .text-accent {{ color: {theme['ACCENT']}; }}
-        .text-muted {{ color: {theme['TEXT_MUTED']}; }}
-        .text-error {{ color: {theme['ERROR']}; }}
-        .text-success {{ color: {theme['SUCCESS']}; }}
-        .text-warning {{ color: {theme['WARNING']}; }}
+        .section-title {{
+            color: {theme['TEXT_MUTED']};
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }}
+        .text-adaptive {{ color: {theme['TEXT_DARK']}; font-size: 13px; }}
+        .text-light    {{ color: {theme['TEXT_DARK']}; }}
+        .text-accent   {{ color: {theme['ACCENT']}; }}
+        .text-muted    {{ color: {theme['TEXT_MUTED']}; font-size: 12px; }}
+        .text-hint     {{ color: {theme['TEXT_HINT']}; font-size: 11px; }}
+        .text-error    {{ color: {theme['ERROR']}; }}
+        .text-success  {{ color: {theme['SUCCESS']}; }}
+        .text-warning  {{ color: {theme['WARNING']}; }}
         .text-muted-11 {{ color: {theme['TEXT_MUTED']}; font-size: 11px; }}
-        .text-hint {{ color: {theme['TEXT_DARK']}; font-size: 10px; margin-top: 8px; }}
-        .text-footer {{ color: {theme['TEXT_DARK']}; padding: 8px; }}
-        .desc-muted {{ color: {theme['TEXT_MUTED']}; font-size: 11px; margin-bottom: 8px; }}
-        .status-indicator {{ color: {theme['ACCENT']}; font-size: 12px; }}
-        
-        .icon-20 {{ font-size: 20px; }}
-        
+        .text-footer   {{ color: {theme['TEXT_HINT']}; font-size: 11px; padding: 6px; }}
+        .desc-muted    {{ color: {theme['TEXT_MUTED']}; font-size: 13px; }}
+        .status-indicator {{ color: {theme['SUCCESS']}; font-size: 11px; }}
+        .label         {{ color: {theme['TEXT_MUTED']}; font-size: 12px; font-weight: 500; }}
+
+        /* ── CONTENEDORES AUXILIARES ─────────────────────────────────── */
         .view-container {{
-            background-color: {theme['BG_SIDEBAR2']};
-            border-radius: 16px;
+            background-color: {theme['BG_ELEVATED']};
+            border-radius: 8px;
+            border: 1px solid {theme['SEPARATOR']};
         }}
         .view-container-small {{
-            background-color: {theme['BG_SIDEBAR2']};
-            border-radius: 12px;
+            background-color: {theme['BG_ELEVATED']};
+            border-radius: 6px;
+            border: 1px solid {theme['SEPARATOR']};
         }}
         .options-frame {{
-            background-color: {theme['BG_SIDEBAR']};
-            border-radius: 8px;
-            padding: 8px;
-        }}
-        .legend-container {{
-            background-color: {theme['BG_SIDEBAR']};
+            background-color: {theme['BG_ELEVATED']};
             border-radius: 6px;
         }}
+        .legend-container {{
+            background-color: {theme['BG_ELEVATED']};
+            border-radius: 6px;
+            border: 1px solid {theme['SEPARATOR']};
+        }}
         .h-separator {{
-            background-color: {theme['BORDER']};
+            background-color: {theme['SEPARATOR']};
             max-width: 1px;
         }}
         .v-gradient-divider {{
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {theme['ACCENT']}, stop:0.5 {theme['TEXT_MUTED']}, stop:1 {theme['ACCENT']});
+            background-color: {theme['SEPARATOR']};
             border-radius: 1px;
         }}
         .warning-box {{
             color: {theme['WARNING']};
-            font-size: 10px;
-            margin-top: 8px;
-            background-color: {theme['BG_SIDEBAR']};
-            padding: 8px;
+            font-size: 12px;
+            background-color: rgba(210, 153, 34, 0.08);
+            padding: 10px 12px;
             border-radius: 6px;
+            border: 1px solid rgba(210, 153, 34, 0.25);
         }}
-        
-        
+        .status-panel {{
+            background-color: {theme['BG_ELEVATED']};
+            border-radius: 6px;
+            border: 1px solid {theme['BORDER']};
+        }}
+
+        /* ── METRIC CARD ──────────────────────────────────────────────── */
         .metric-card {{
-            background-color: {theme['BG_SIDEBAR']};
-            border-radius: 12px;
-            border: 1px solid transparent;
+            background-color: {theme['BG_SURFACE']};
+            border-radius: 8px;
+            border: 1px solid {theme['BORDER']};
         }}
         .metric-card:hover {{
             border-color: {theme['ACCENT']};
-            background-color: {theme['BG_SIDEBAR2']};
         }}
-        .icon-16-accent {{ font-size: 16px; color: {theme['ACCENT']}; }}
-        
+
+        /* ── FILE SELECTOR ────────────────────────────────────────────── */
         .file-selector-input {{
-            background-color: transparent;
+            background-color: {theme['BG_ELEVATED']};
             border: 1px solid {theme['BORDER']};
-            border-radius: 8px;
-            padding: 8px 12px;
-            color: {theme['TEXT_LIGHT']};
-            font-size: 12px;
+            border-radius: 6px;
+            padding: 7px 10px;
+            color: {theme['TEXT_DARK']};
+            font-size: 13px;
         }}
         .file-selector-input:focus {{
             border-color: {theme['ACCENT']};
         }}
-    
-        /* BOTONES GENERICOS PRIMARIOS Y SECUNDARIOS */
-        .btn-danger {{
-            background-color: transparent;
-            border: 1px solid {theme['ERROR']};
-            color: {theme['ERROR']};
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-size: 12px;
-        }}
-        .btn-danger:hover:enabled {{
-            background-color: {theme['ERROR']};
-            color: white;
-        }}
-        .btn-danger:disabled {{
-            border-color: {theme['BORDER']};
-            color: {theme['BORDER']};
-        }}
-        
-        .status-panel {{
-            background-color: {theme['BG_SIDEBAR2']};
-            border-radius: 12px;
-            border: 1px solid {theme['BORDER']};
-        }}
-        
-        .icon-14 {{ font-size: 14px; }}
 
+        /* ── BOTONES GENÉRICOS ────────────────────────────────────────── */
         .btn-primary {{
             background-color: {theme['ACCENT']};
             border: none;
-            border-radius: 10px;
-            color: white;
-            font-weight: bold;
-            font-size: 14px;
-            padding: 10px 24px;
+            border-radius: 6px;
+            color: #FFFFFF;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 8px 20px;
         }}
         .btn-primary:hover {{
-            background-color: {theme['ACCENT']}dd; /* Slightly transparent via hex? Better handled by opacity */
+            background-color: {theme['ACCENT_DARK']};
         }}
         .btn-primary:disabled {{
             background-color: {theme['BORDER']};
-            color: {theme['TEXT_DARK']};
+            color: {theme['TEXT_HINT']};
         }}
-        
+
         .btn-secondary-animated {{
             background-color: transparent;
             border: 1px solid {theme['BORDER']};
-            border-radius: 10px;
+            border-radius: 6px;
             color: {theme['TEXT_MUTED']};
-            font-weight: bold;
-            font-size: 14px;
-            padding: 10px 24px;
+            font-weight: 500;
+            font-size: 13px;
+            padding: 8px 20px;
         }}
         .btn-secondary-animated:hover {{
-            border-color: {theme['ACCENT']};
+            background-color: {theme['BG_ELEVATED']};
+            border-color: {theme['TEXT_MUTED']};
+            color: {theme['TEXT_DARK']};
+        }}
+
+        .btn-danger {{
+            background-color: transparent;
+            border: 1px solid {theme['ERROR']};
+            border-radius: 6px;
+            color: {theme['ERROR']};
+            font-weight: 500;
+            font-size: 13px;
+            padding: 8px 20px;
+        }}
+        .btn-danger:hover:enabled {{
+            background-color: {theme['ERROR']};
+            color: #FFFFFF;
+        }}
+        .btn-danger:disabled {{
+            border-color: {theme['BORDER']};
+            color: {theme['TEXT_HINT']};
+        }}
+
+        .icon-14 {{ font-size: 14px; }}
+        .icon-16-accent {{ font-size: 16px; color: {theme['ACCENT']}; }}
+        .icon-20 {{ font-size: 20px; }}
+
+        /* ── TAB WIDGET ─────────────────────────────────────────────── */
+        QTabWidget::pane {{
+            border: none;
+            background-color: transparent;
+        }}
+        QTabWidget {{
+            background-color: transparent;
+        }}
+        QTabBar {{
+            background-color: transparent;
+        }}
+        QTabBar::tab {{
+            background-color: transparent;
+            color: {theme['TEXT_MUTED']};
+            padding: 10px 20px;
+            border: none;
+            border-bottom: 2px solid transparent;
+            font-size: 13px;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 500;
+            min-width: 100px;
+        }}
+        QTabBar::tab:selected {{
             color: {theme['ACCENT']};
+            border-bottom-color: {theme['ACCENT']};
+            font-weight: 600;
+        }}
+        QTabBar::tab:hover:!selected {{
+            color: {theme['TEXT_DARK']};
+            background-color: {theme['BG_ELEVATED']};
+        }}
+
+        /* ── FORM CARD (tarjeta de formulario) ───────────────────────── */
+        QFrame#formCard {{
+            background-color: {theme['BG_SURFACE']};
+            border: 1px solid {theme['BORDER']};
+            border-radius: 10px;
+        }}
+        QFrame#terminalCard {{
+            background-color: {theme['BG_BASE']};
+            border: 1px solid {theme['BORDER']};
+            border-radius: 10px;
         }}
     """

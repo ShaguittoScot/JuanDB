@@ -1,28 +1,31 @@
 def get_components_style(theme: dict) -> str:
     return f"""
-        /* ── CARD ────────────────────────────────────────────────── */
+        /* ── CARD PRINCIPAL ───────────────────────────────────────────── */
         QFrame#card {{
-            background-color: {theme['BG_CARD']};
-            border-radius: 12px;
+            background-color: {theme['BG_SURFACE']};
+            border-radius: 10px;
             border: 1px solid {theme['BORDER']};
         }}
 
         QLabel#cardTag {{
             color: {theme['ACCENT']};
-            letter-spacing: 3px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
         }}
 
         QFrame#accentLine {{
             background-color: {theme['ACCENT']};
-            border-radius: 2px;
+            border-radius: 1px;
         }}
 
         QLabel#cardDesc {{
             color: {theme['TEXT_MUTED']};
-            line-height: 1.6;
+            font-size: 13px;
+            line-height: 1.5;
         }}
 
-        /* ── PLACEHOLDER ─────────────────────────────────────────── */
+        /* ── PLACEHOLDER ──────────────────────────────────────────────── */
         QFrame#placeholder {{
             background-color: {theme['BG_CONTENT']};
             border-radius: 8px;
@@ -30,11 +33,12 @@ def get_components_style(theme: dict) -> str:
         }}
 
         QLabel#phLabel {{
-            color: {theme['TEXT_MUTED']};
-            letter-spacing: 2px;
+            color: {theme['TEXT_HINT']};
+            letter-spacing: 1px;
+            font-size: 12px;
         }}
 
-        /* ── STACK ───────────────────────────────────────────────── */
+        /* ── STACK ────────────────────────────────────────────────────── */
         QStackedWidget#stack {{
             background-color: transparent;
         }}

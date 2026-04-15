@@ -1,12 +1,10 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QFrame, QLabel,
     QTableWidget, QTableWidgetItem, QHeaderView, QLineEdit,
-    QPushButton, QAbstractItemView, QMessageBox, QCheckBox,
-    QComboBox, QGroupBox, QSpacerItem
+    QPushButton, QAbstractItemView, QMessageBox, QCheckBox, QComboBox
 )
-from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, pyqtProperty
-from PyQt6.QtGui import QFont, QCursor, QColor, QPalette, QIcon
-import re
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QFont, QCursor
 
 from ui.components.animated_button import AnimatedButton
 from ui.components.password_indicator import PasswordStrengthIndicator
@@ -15,415 +13,432 @@ from ui.components.password_indicator import PasswordStrengthIndicator
 class SecurityView(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setMinimumSize(1200, 750)
+        self.setMinimumSize(1000, 580)
         self._build_ui()
         self._setup_connections()
-        
+
+    # ── Señales ───────────────────────────────────────────────────────────────
 
     def _setup_connections(self):
-        """Configura las conexiones de señales"""
         self.btn_refresh.clicked.connect(self._on_refresh_clicked)
         self.btn_delete.clicked.connect(self._on_delete_clicked)
+        self.btn_edit.clicked.connect(self._on_edit_clicked)
         self.btn_create.clicked.connect(self._on_create_clicked)
         self.table.itemSelectionChanged.connect(self._on_table_select)
         self.txt_pass.textChanged.connect(self._on_password_changed)
-        
+
+    # ── Construcción ──────────────────────────────────────────────────────────
+
     def _build_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(20)
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
 
-        # Tarjeta principal
-        card = QFrame()
-        card.setObjectName("card")
-        card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(40, 32, 40, 32)
-        card_layout.setSpacing(20)
+        root.addWidget(self._page_header())
 
-        # Header mejorado
-        header_layout = QHBoxLayout()
-        
-        tag_container = QVBoxLayout()
-        tag = QLabel("<img src='assets/icons/lock.svg' width='14' height='14'> CONTROL DE ACCESO")
-        tag.setObjectName("cardTag")
-        tag.setFont(QFont("Courier New", 8, QFont.Weight.Bold))
-        
-        accent_line = QFrame()
-        accent_line.setObjectName("accentLine")
-        accent_line.setFixedSize(60, 3)
-        
-        tag_container.addWidget(tag)
-        tag_container.addWidget(accent_line)
-        
-        title = QLabel("Seguridad y Permisos")
-        title.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
+        body = QFrame()
+        bl = QHBoxLayout(body)
+        bl.setContentsMargins(24, 20, 24, 24)
+        bl.setSpacing(16)
+        bl.addWidget(self._users_card(), 3)
+        bl.addWidget(self._form_card(), 2)
+
+        root.addWidget(body, 1)
+
+    # ── Page header ───────────────────────────────────────────────────────────
+
+    def _page_header(self) -> QFrame:
+        h = QFrame()
+        l = QVBoxLayout(h)
+        l.setContentsMargins(24, 18, 24, 14)
+        l.setSpacing(3)
+
+        title = QLabel("Seguridad")
+        title.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
         title.setProperty("class", "view-title")
-        
-        header_layout.addLayout(tag_container)
-        header_layout.addStretch()
-        header_layout.addWidget(title)
-        header_layout.addStretch()
-        
-        card_layout.addLayout(header_layout)
-        
-        # Descripción mejorada
-        desc = QLabel("Administra las cuentas de usuario de la base de datos con control granular de permisos.\n"
-                     "Puedes crear nuevos usuarios, modificar privilegios y revocar accesos de forma segura.")
-        desc.setObjectName("cardDesc")
-        desc.setFont(QFont("Segoe UI", 11))
-        desc.setWordWrap(True)
-        card_layout.addWidget(desc)
-        
-        card_layout.addSpacing(16)
 
-        # Split principal
-        split_layout = QHBoxLayout()
-        split_layout.setSpacing(32)
-        
-        # Lado izquierdo - Tabla de usuarios
-        left_container = QFrame()
-        left_container.setProperty("class", "view-container")
-        left_layout = QVBoxLayout(left_container)
-        left_layout.setContentsMargins(20, 20, 20, 20)
-        left_layout.setSpacing(16)
-        
-        # Header de tabla
-        table_header = QHBoxLayout()
-        table_icon = QLabel("<img src='assets/icons/users.svg' width='16' height='16'>")
-        table_icon.setProperty("class", "icon-20")
-        table_title = QLabel("Usuarios Registrados")
-        table_title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
-        table_title.setProperty("class", "view-subtitle-accent")
-        
-        table_header.addWidget(table_icon)
-        table_header.addWidget(table_title)
-        table_header.addStretch()
-        
-        # Contador de usuarios
-        self.user_count_label = QLabel("0 usuarios")
-        self.user_count_label.setProperty("class", "text-muted-11")
-        table_header.addWidget(self.user_count_label)
-        
-        left_layout.addLayout(table_header)
-        
-        # Tabla mejorada
+        sub = QLabel("Administra cuentas de usuario MySQL, hosts autorizados y privilegios de acceso.")
+        sub.setFont(QFont("Segoe UI", 12))
+        sub.setProperty("class", "text-muted")
+
+        l.addWidget(title)
+        l.addWidget(sub)
+        h.setStyleSheet("border-bottom: 1px solid #21262D;")
+        return h
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Card izquierda — Tabla de usuarios
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def _users_card(self) -> QFrame:
+        card = QFrame()
+        card.setObjectName("formCard")
+        cl = QVBoxLayout(card)
+        cl.setContentsMargins(0, 0, 0, 0)
+        cl.setSpacing(0)
+
+        # Header
+        hdr = QFrame()
+        hdr.setFixedHeight(52)
+        hdr.setStyleSheet("""
+            QFrame {
+                border: none;
+                border-bottom: 1px solid #30363D;
+                border-top-left-radius: 10px;
+                border-top-right-radius: 10px;
+                background: transparent;
+            }
+        """)
+        hl = QHBoxLayout(hdr)
+        hl.setContentsMargins(16, 0, 16, 0)
+
+        t = QLabel("Usuarios registrados")
+        t.setFont(QFont("Segoe UI", 13, QFont.Weight.DemiBold))
+        t.setProperty("class", "view-subtitle-muted")
+
+        self.user_count_label = QLabel("—")
+        self.user_count_label.setFont(QFont("Segoe UI", 11))
+        self.user_count_label.setProperty("class", "text-hint")
+        self.user_count_label.setStyleSheet(
+            "background-color: #21262D; border-radius: 10px; padding: 2px 10px;"
+        )
+
+        hl.addWidget(t)
+        hl.addStretch()
+        hl.addWidget(self.user_count_label)
+        cl.addWidget(hdr)
+
+        # Tabla
         self.table = QTableWidget()
         self.table.setColumnCount(3)
-        self.table.setHorizontalHeaderLabels(["Usuario", "Host", "Privilegios"])
+        self.table.setHorizontalHeaderLabels(["USUARIO", "HOST", "PRIVILEGIOS"])
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+        self.table.horizontalHeader().setHighlightSections(False)
+        self.table.horizontalHeader().setDefaultAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
+        self.table.verticalHeader().setVisible(False)
+        self.table.setShowGrid(False)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.table.setAlternatingRowColors(True)
-        self.table.setMinimumHeight(300)
-        
-        left_layout.addWidget(self.table)
-        
-        # Botones de acción para tabla
-        table_buttons = QHBoxLayout()
-        table_buttons.setSpacing(12)
-        
-        self.btn_refresh = QPushButton("Refrescar")
-        self.btn_refresh.setIcon(QIcon("assets/icons/refresh.svg"))
-        self.btn_refresh.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        cl.addWidget(self.table, 1)
+
+        # Toolbar plana
+        toolbar = QFrame()
+        toolbar.setFixedHeight(48)
+        toolbar.setStyleSheet("""
+            QFrame {
+                border: none;
+                border-top: 1px solid #30363D;
+                border-bottom-left-radius: 10px;
+                border-bottom-right-radius: 10px;
+                background: transparent;
+            }
+        """)
+        tl = QHBoxLayout(toolbar)
+        tl.setContentsMargins(12, 0, 12, 0)
+        tl.setSpacing(6)
+
+        self.btn_refresh = QPushButton("↺  Actualizar")
         self.btn_refresh.setProperty("class", "btn-secondary-animated")
-        
-        self.btn_delete = QPushButton("Eliminar Seleccionado")
-        self.btn_delete.setIcon(QIcon("assets/icons/trash.svg"))
-        self.btn_delete.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.btn_delete.setEnabled(False)
+        self.btn_refresh.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.btn_refresh.setFont(QFont("Segoe UI", 11, QFont.Weight.Medium))
+        self.btn_refresh.setFixedHeight(32)
+
+        self.btn_edit = QPushButton("✎  Editar")
+        self.btn_edit.setProperty("class", "btn-secondary-animated")
+        self.btn_edit.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.btn_edit.setFont(QFont("Segoe UI", 11, QFont.Weight.Medium))
+        self.btn_edit.setFixedHeight(32)
+        self.btn_edit.setEnabled(False)
+
+        self.btn_delete = QPushButton("🗑  Eliminar")
         self.btn_delete.setProperty("class", "btn-danger")
-        
-        self.btn_edit_privileges = QPushButton("Editar Privilegios")
-        self.btn_edit_privileges.setIcon(QIcon("assets/icons/wrench.svg"))
-        self.btn_edit_privileges.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.btn_edit_privileges.setEnabled(False)
-        self.btn_edit_privileges.setProperty("class", "btn-secondary-animated")
-        
-        table_buttons.addWidget(self.btn_refresh)
-        table_buttons.addWidget(self.btn_delete)
-        table_buttons.addWidget(self.btn_edit_privileges)
-        table_buttons.addStretch()
-        
-        left_layout.addLayout(table_buttons)
-        
-        # Lado derecho - Formulario de creación
-        right_container = QFrame()
-        right_container.setProperty("class", "view-container")
-        right_layout = QVBoxLayout(right_container)
-        right_layout.setContentsMargins(24, 24, 24, 24)
-        right_layout.setSpacing(20)
-        
-        # Header del formulario
-        form_header = QHBoxLayout()
-        form_icon = QLabel("<img src='assets/icons/sparkles.svg' width='16' height='16'>")
-        form_icon.setProperty("class", "icon-20")
-        form_title = QLabel("Crear Nueva Cuenta")
-        form_title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
-        form_title.setProperty("class", "view-subtitle-muted")
-        
-        form_header.addWidget(form_icon)
-        form_header.addWidget(form_title)
-        form_header.addStretch()
-        
-        right_layout.addLayout(form_header)
-        
-        # Campos del formulario
-        # Usuario
-        user_label = QLabel("<img src='assets/icons/user.svg' width='14' height='14'> Nombre de Usuario")
-        user_label.setProperty("class", "label")
-        right_layout.addWidget(user_label)
-        
+        self.btn_delete.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.btn_delete.setFont(QFont("Segoe UI", 11, QFont.Weight.Medium))
+        self.btn_delete.setFixedHeight(32)
+        self.btn_delete.setEnabled(False)
+
+        tl.addWidget(self.btn_refresh)
+        tl.addWidget(self.btn_edit)
+        tl.addStretch()
+        tl.addWidget(self.btn_delete)
+        cl.addWidget(toolbar)
+
+        self._load_sample_data()
+        return card
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Card derecha — Formulario de creación
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def _form_card(self) -> QFrame:
+        card = QFrame()
+        card.setObjectName("formCard")
+        card.setMaximumWidth(420)
+        cl = QVBoxLayout(card)
+        cl.setContentsMargins(0, 0, 0, 0)
+        cl.setSpacing(0)
+
+        # Header
+        hdr = QFrame()
+        hdr.setFixedHeight(52)
+        hdr.setStyleSheet("""
+            QFrame {
+                border: none;
+                border-bottom: 1px solid #30363D;
+                border-top-left-radius: 10px;
+                border-top-right-radius: 10px;
+                background: transparent;
+            }
+        """)
+        hl = QHBoxLayout(hdr)
+        hl.setContentsMargins(16, 0, 16, 0)
+
+        t = QLabel("Nueva cuenta")
+        t.setFont(QFont("Segoe UI", 13, QFont.Weight.DemiBold))
+        t.setProperty("class", "view-subtitle-muted")
+        hl.addWidget(t)
+        cl.addWidget(hdr)
+
+        # Campos
+        form = QFrame()
+        fl = QVBoxLayout(form)
+        fl.setContentsMargins(20, 20, 20, 20)
+        fl.setSpacing(14)
+
+        # Nombre de usuario
+        fl.addWidget(self._lbl("Nombre de usuario"))
         self.txt_user = QLineEdit()
-        self.txt_user.setPlaceholderText("ej. usuario_app")
-        right_layout.addWidget(self.txt_user)
-        
-        # Host
-        host_label = QLabel("<img src='assets/icons/globe.svg' width='14' height='14'> Host Autorizado")
-        host_label.setProperty("class", "label")
-        right_layout.addWidget(host_label)
-        
-        host_layout = QHBoxLayout()
+        self.txt_user.setPlaceholderText("ej.  usuario_app")
+        self.txt_user.setFixedHeight(38)
+        fl.addWidget(self.txt_user)
+
+        # Host + preset inline
+        fl.addWidget(self._lbl("Host autorizado"))
+        host_row = QHBoxLayout(); host_row.setSpacing(6)
         self.txt_host = QLineEdit()
         self.txt_host.setText("%")
-        self.txt_host.setPlaceholderText("localhost, %, o IP específica")
-        
-        host_presets = QComboBox()
-        host_presets.addItems(["Seleccionar preset", "localhost", "% (cualquier host)", "127.0.0.1"])
-        host_presets.currentTextChanged.connect(lambda x: self._on_host_preset(x, host_presets))
-        
-        host_layout.addWidget(self.txt_host, 2)
-        host_layout.addWidget(host_presets, 1)
-        right_layout.addLayout(host_layout)
-        
+        self.txt_host.setFixedHeight(38)
+
+        self.cmb_host_preset = QComboBox()
+        self.cmb_host_preset.addItems(["Preset…", "localhost", "% (todos)", "127.0.0.1"])
+        self.cmb_host_preset.setFixedHeight(38)
+        self.cmb_host_preset.setFixedWidth(120)
+        self.cmb_host_preset.currentTextChanged.connect(self._on_host_preset)
+
+        host_row.addWidget(self.txt_host, 1)
+        host_row.addWidget(self.cmb_host_preset)
+        fl.addLayout(host_row)
+
         # Contraseña
-        pass_label = QLabel("<img src='assets/icons/key.svg' width='14' height='14'> Contraseña")
-        pass_label.setProperty("class", "label")
-        right_layout.addWidget(pass_label)
-        
+        fl.addWidget(self._lbl("Contraseña"))
+        pass_row = QHBoxLayout(); pass_row.setSpacing(6)
         self.txt_pass = QLineEdit()
-        self.txt_pass.setPlaceholderText("Contraseña segura")
+        self.txt_pass.setPlaceholderText("Mínimo 6 caracteres")
         self.txt_pass.setEchoMode(QLineEdit.EchoMode.Password)
-        right_layout.addWidget(self.txt_pass)
-        
-        # Indicador de fortaleza
+        self.txt_pass.setFixedHeight(38)
+
+        self.btn_show_pass = QPushButton("👁")
+        self.btn_show_pass.setFixedSize(38, 38)
+        self.btn_show_pass.setCheckable(True)
+        self.btn_show_pass.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.btn_show_pass.setProperty("class", "btn-secondary-animated")
+        self.btn_show_pass.toggled.connect(self._toggle_pass_vis)
+
+        pass_row.addWidget(self.txt_pass, 1)
+        pass_row.addWidget(self.btn_show_pass)
+        fl.addLayout(pass_row)
+
         self.pass_strength = PasswordStrengthIndicator()
-        right_layout.addWidget(self.pass_strength)
-        
-        # Mostrar contraseña
-        self.chk_show_pass = QCheckBox("Mostrar contraseña")
-        self.chk_show_pass.stateChanged.connect(self._toggle_password_visibility)
-        right_layout.addWidget(self.chk_show_pass)
-        
-        # Confirmar contraseña
-        confirm_label = QLabel("<img src='assets/icons/check.svg' width='14' height='14'> Confirmar Contraseña")
-        confirm_label.setProperty("class", "label")
-        right_layout.addWidget(confirm_label)
-        
-        self.txt_confirm_pass = QLineEdit()
-        self.txt_confirm_pass.setPlaceholderText("Repite la contraseña")
-        self.txt_confirm_pass.setEchoMode(QLineEdit.EchoMode.Password)
-        right_layout.addWidget(self.txt_confirm_pass)
-        
-        # Opciones adicionales
-        options_group = QGroupBox("Opciones Adicionales")
-        options_layout = QVBoxLayout(options_group)
-        
-        self.chk_grant_priv = QCheckBox("Conceder privilegios administrativos")
-        self.chk_expire_pass = QCheckBox("Expirar contraseña en primer inicio")
-        
-        options_layout.addWidget(self.chk_grant_priv)
-        options_layout.addWidget(self.chk_expire_pass)
-        right_layout.addWidget(options_group)
-        
+        fl.addWidget(self.pass_strength)
+
+        # Confirmar
+        fl.addWidget(self._lbl("Confirmar contraseña"))
+        self.txt_confirm = QLineEdit()
+        self.txt_confirm.setPlaceholderText("Repite la contraseña")
+        self.txt_confirm.setEchoMode(QLineEdit.EchoMode.Password)
+        self.txt_confirm.setFixedHeight(38)
+        fl.addWidget(self.txt_confirm)
+
+        # Divisor
+        fl.addWidget(self._hdiv())
+
+        # Opciones
+        self.chk_grant = QCheckBox("Otorgar privilegios administrativos")
+        self.chk_expire = QCheckBox("Expirar contraseña en primer inicio")
+        for chk in (self.chk_grant, self.chk_expire):
+            chk.setFont(QFont("Segoe UI", 12))
+            fl.addWidget(chk)
+
         # Mensaje de estado
         self.lbl_msg = QLabel("")
         self.lbl_msg.setWordWrap(True)
-        self.lbl_msg.setStyleSheet("""
-            QLabel {
-                padding: 8px;
-                border-radius: 6px;
-                background-color: rgba(18, 10, 28, 0.6);
-            }
-            QLabel[status="success"] {
-                color: #4ADE80;
-                border-left: 3px solid #4ADE80;
-            }
-            QLabel[status="error"] {
-                color: #FF4444;
-                border-left: 3px solid #FF4444;
-            }
-            QLabel[status="warning"] {
-                color: #FFB86C;
-                border-left: 3px solid #FFB86C;
-            }
-        """)
-        right_layout.addWidget(self.lbl_msg)
-        
-        # Botón de creación
-        self.btn_create = AnimatedButton("Crear Usuario")
-        self.btn_create.setIcon(QIcon("assets/icons/sparkles.svg"))
-        self.btn_create.setProperty("class", "btn-primary")
-        self.btn_create.setMinimumHeight(44)
-        right_layout.addWidget(self.btn_create)
-        
-        # Información de ayuda
-        help_text = QLabel("<img src='assets/icons/info.svg' width='14' height='14'> Los usuarios creados tendrán acceso básico. "
-                          "Puedes modificar sus privilegios después de la creación.")
-        help_text.setWordWrap(True)
-        help_text.setProperty("class", "text-hint")
-        right_layout.addWidget(help_text)
-        
-        right_layout.addStretch()
-        
-        # Agregar ambos lados al split
-        split_layout.addWidget(left_container, 2)
-        split_layout.addWidget(right_container, 1)
-        
-        card_layout.addLayout(split_layout)
-        card_layout.addStretch()
+        self.lbl_msg.setFont(QFont("Segoe UI", 12))
+        self.lbl_msg.hide()
+        fl.addWidget(self.lbl_msg)
 
-        layout.addWidget(card)
-        layout.addStretch()
-        
-        # Datos de ejemplo
-        self._load_sample_data()
-        
+        fl.addStretch()
+
+        # Botón de creación — full width
+        self.btn_create = AnimatedButton("Crear usuario")
+        self.btn_create.setProperty("class", "btn-primary")
+        self.btn_create.setFixedHeight(40)
+        self.btn_create.setFont(QFont("Segoe UI", 13, QFont.Weight.DemiBold))
+        fl.addWidget(self.btn_create)
+
+        # Nota
+        note = QLabel("ℹ  Las cuentas nuevas tienen privilegios básicos. Usa 'Editar' para ampliarlos.")
+        note.setFont(QFont("Segoe UI", 11))
+        note.setProperty("class", "text-hint")
+        note.setWordWrap(True)
+        fl.addWidget(note)
+
+        cl.addWidget(form, 1)
+        return card
+
+    # ── Helpers ───────────────────────────────────────────────────────────────
+
+    def _lbl(self, text: str) -> QLabel:
+        l = QLabel(text)
+        l.setFont(QFont("Segoe UI", 11, QFont.Weight.Medium))
+        l.setProperty("class", "text-muted")
+        return l
+
+    def _hdiv(self) -> QFrame:
+        d = QFrame()
+        d.setFixedHeight(1)
+        d.setStyleSheet("background-color: #21262D; border: none;")
+        return d
+
+    def _show_msg(self, text: str, kind: str = "info"):
+        # Usa los tokens del tema — solo necesitamos el color del tipo
+        color_map = {
+            "success": "#3FB950",   # SUCCESS
+            "error":   "#F85149",   # ERROR
+            "warning": "#D29922",   # WARNING
+            "info":    "#58A6FF",   # INFO
+        }
+        c = color_map.get(kind, "#7D8590")
+        self.lbl_msg.setText(text)
+        self.lbl_msg.setStyleSheet(
+            f"color:{c}; border-left:2px solid {c}; padding:7px 10px; border-radius:4px;"
+        )
+        self.lbl_msg.show()
+        if kind != "error":
+            QTimer.singleShot(5000, self.lbl_msg.hide)
+
+    # ── Datos de ejemplo ─────────────────────────────────────────────────────
+
     def _load_sample_data(self):
-        """Carga datos de ejemplo para la tabla"""
-        sample_users = [
-            ("admin", "localhost", "Todos los privilegios"),
-            ("app_user", "%", "SELECT, INSERT, UPDATE"),
+        rows = [
+            ("admin",    "localhost",   "Todos los privilegios"),
+            ("app_user", "%",           "SELECT, INSERT, UPDATE"),
             ("readonly", "192.168.1.%", "SELECT"),
         ]
-        
-        self.table.setRowCount(len(sample_users))
-        for row, (user, host, privileges) in enumerate(sample_users):
-            self.table.setItem(row, 0, QTableWidgetItem(user))
-            self.table.setItem(row, 1, QTableWidgetItem(host))
-            self.table.setItem(row, 2, QTableWidgetItem(privileges))
-            
-        self.user_count_label.setText(f"{len(sample_users)} usuarios")
-        
-    def _on_host_preset(self, preset, combo):
-        """Maneja la selección de preset de host"""
-        if preset != "Seleccionar preset":
-            self.txt_host.setText(preset)
-            combo.setCurrentIndex(0)
-            
-    def _toggle_password_visibility(self, state):
-        """Muestra/oculta la contraseña"""
-        echo_mode = QLineEdit.EchoMode.Normal if state else QLineEdit.EchoMode.Password
-        self.txt_pass.setEchoMode(echo_mode)
-        self.txt_confirm_pass.setEchoMode(echo_mode)
-        
-    def _on_password_changed(self, text):
-        """Evalúa la fortaleza de la contraseña"""
+        self.table.setRowCount(len(rows))
+        for r, (user, host, privs) in enumerate(rows):
+            for c, val in enumerate([user, host, privs]):
+                item = QTableWidgetItem(val)
+                item.setFont(QFont("Segoe UI", 13))
+                self.table.setItem(r, c, item)
+            self.table.setRowHeight(r, 38)
+        self.user_count_label.setText(str(len(rows)))
+
+    # ── Lógica ────────────────────────────────────────────────────────────────
+
+    def _on_host_preset(self, text: str):
+        mapping = {"localhost": "localhost", "% (todos)": "%", "127.0.0.1": "127.0.0.1"}
+        if text in mapping:
+            self.txt_host.setText(mapping[text])
+            self.cmb_host_preset.blockSignals(True)
+            self.cmb_host_preset.setCurrentIndex(0)
+            self.cmb_host_preset.blockSignals(False)
+
+    def _toggle_pass_vis(self, checked: bool):
+        mode = QLineEdit.EchoMode.Normal if checked else QLineEdit.EchoMode.Password
+        self.txt_pass.setEchoMode(mode)
+        self.txt_confirm.setEchoMode(mode)
+
+    def _on_password_changed(self, text: str):
         self.pass_strength.check_strength(text)
-        
+
     def _on_table_select(self):
-        """Maneja la selección en la tabla"""
-        items = self.table.selectedItems()
-        has_selection = len(items) > 0
-        self.btn_delete.setEnabled(has_selection)
-        self.btn_edit_privileges.setEnabled(has_selection)
-        
+        has = len(self.table.selectedItems()) > 0
+        self.btn_delete.setEnabled(has)
+        self.btn_edit.setEnabled(has)
+
     def _on_refresh_clicked(self):
-        """Refresca la lista de usuarios"""
-        self.show_message("Refrescando lista de usuarios...", "info")
-        # Aquí iría la lógica para recargar usuarios
-        # Simular carga
-        from PyQt6.QtCore import QTimer
-        QTimer.singleShot(1000, lambda: self.show_message("Lista de usuarios actualizada", "success"))
-        
+        self._show_msg("Actualizando lista de usuarios...", "info")
+        QTimer.singleShot(900, lambda: self._show_msg("Lista actualizada", "success"))
+
+    def _on_edit_clicked(self):
+        row = self.table.currentRow()
+        if row >= 0:
+            user = self.table.item(row, 0).text()
+            self._show_msg(f"Editar privilegios de '{user}' — (pendiente)", "info")
+
     def _on_delete_clicked(self):
-        """Elimina el usuario seleccionado"""
-        current_row = self.table.currentRow()
-        if current_row >= 0:
-            user = self.table.item(current_row, 0).text()
-            host = self.table.item(current_row, 1).text()
-            
-            reply = QMessageBox.question(
-                self,
-                "Confirmar Eliminación",
-                f"¿Estás seguro de eliminar al usuario '{user}'@{host}?\n\n"
-                "Esta acción no se puede deshacer.",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
-            
-            if reply == QMessageBox.StandardButton.Yes:
-                self.table.removeRow(current_row)
-                self.user_count_label.setText(f"{self.table.rowCount()} usuarios")
-                self.show_message(f"Usuario '{user}'@{host} eliminado correctamente", "success")
-                
+        row = self.table.currentRow()
+        if row < 0:
+            return
+        user = self.table.item(row, 0).text()
+        host = self.table.item(row, 1).text()
+        reply = QMessageBox.question(
+            self, "Confirmar eliminación",
+            f"¿Eliminar '{user}'@'{host}'?\nEsta acción no se puede deshacer.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            self.table.removeRow(row)
+            self.user_count_label.setText(str(self.table.rowCount()))
+            self._show_msg(f"Usuario '{user}' eliminado", "success")
+
     def _on_create_clicked(self):
-        """Crea un nuevo usuario"""
         user = self.txt_user.text().strip()
         host = self.txt_host.text().strip()
-        password = self.txt_pass.text()
-        confirm = self.txt_confirm_pass.text()
-        
-        # Validaciones
-        if not user:
-            self.show_message("<img src='assets/icons/cross.svg' width='14' height='14'> El nombre de usuario es obligatorio", "error")
-            return
-            
-        if not host:
-            self.show_message("<img src='assets/icons/cross.svg' width='14' height='14'> El host es obligatorio", "error")
-            return
-            
-        if not password:
-            self.show_message("<img src='assets/icons/cross.svg' width='14' height='14'> La contraseña es obligatoria", "error")
-            return
-            
-        if password != confirm:
-            self.show_message("<img src='assets/icons/cross.svg' width='14' height='14'> Las contraseñas no coinciden", "error")
-            return
-            
-        if len(password) < 6:
-            self.show_message("<img src='assets/icons/warning.svg' width='14' height='14'> La contraseña debe tener al menos 6 caracteres", "warning")
-            return
-            
-        # Verificar si el usuario ya existe
-        for row in range(self.table.rowCount()):
-            existing_user = self.table.item(row, 0).text()
-            existing_host = self.table.item(row, 1).text()
-            if existing_user == user and existing_host == host:
-                self.show_message(f"<img src='assets/icons/cross.svg' width='14' height='14'> El usuario '{user}'@{host} ya existe", "error")
+        pw   = self.txt_pass.text()
+        conf = self.txt_confirm.text()
+
+        checks = [
+            (not user,    "El nombre de usuario es obligatorio"),
+            (not host,    "El host es obligatorio"),
+            (not pw,      "La contraseña es obligatoria"),
+            (pw != conf,  "Las contraseñas no coinciden"),
+            (len(pw) < 6, "La contraseña debe tener al menos 6 caracteres"),
+        ]
+        for condition, msg in checks:
+            if condition:
+                self._show_msg(msg, "error")
                 return
-                
-        # Agregar usuario
-        row = self.table.rowCount()
-        self.table.insertRow(row)
-        self.table.setItem(row, 0, QTableWidgetItem(user))
-        self.table.setItem(row, 1, QTableWidgetItem(host))
-        
-        privileges = "Privilegios básicos"
-        if self.chk_grant_priv.isChecked():
-            privileges = "Privilegios administrativos"
-            
-        self.table.setItem(row, 2, QTableWidgetItem(privileges))
-        
-        self.user_count_label.setText(f"{self.table.rowCount()} usuarios")
-        
-        # Limpiar formulario
-        self.txt_user.clear()
-        self.txt_pass.clear()
-        self.txt_confirm_pass.clear()
-        self.chk_grant_priv.setChecked(False)
-        self.chk_expire_pass.setChecked(False)
-        
-        self.show_message(f"<img src='assets/icons/check.svg' width='14' height='14'> Usuario '{user}'@{host} creado exitosamente", "success")
-        
-    def show_message(self, msg, msg_type="info"):
-        """Muestra mensajes de estado"""
-        self.lbl_msg.setText(msg)
-        self.lbl_msg.setProperty("status", msg_type)
-        self.lbl_msg.style().polish(self.lbl_msg)
-        
-        # Auto-ocultar después de 5 segundos si es éxito o info
-        if msg_type != "error":
-            from PyQt6.QtCore import QTimer
-            QTimer.singleShot(5000, lambda: self.lbl_msg.setText(""))
+
+        for r in range(self.table.rowCount()):
+            if self.table.item(r, 0).text() == user and self.table.item(r, 1).text() == host:
+                self._show_msg(f"'{user}'@'{host}' ya existe", "error")
+                return
+
+        r = self.table.rowCount()
+        self.table.insertRow(r)
+        privs = "Administrativos" if self.chk_grant.isChecked() else "Básicos"
+        for c, val in enumerate([user, host, privs]):
+            item = QTableWidgetItem(val)
+            item.setFont(QFont("Segoe UI", 13))
+            self.table.setItem(r, c, item)
+        self.table.setRowHeight(r, 38)
+        self.user_count_label.setText(str(self.table.rowCount()))
+
+        for w in (self.txt_user, self.txt_pass, self.txt_confirm):
+            w.clear()
+        self.chk_grant.setChecked(False)
+        self.chk_expire.setChecked(False)
+        self._show_msg(f"'{user}'@'{host}' creado exitosamente", "success")
+
+    # ── API pública ─────────────────────────────────────────────────────────
+
+    def show_message(self, msg: str, msg_type: str = "info"):
+        self._show_msg(msg, msg_type)

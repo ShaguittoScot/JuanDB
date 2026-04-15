@@ -2,79 +2,47 @@ from PyQt6.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QLabel
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
 
+
 class MetricCard(QFrame):
-    """Tarjeta de métrica mejorada con animaciones"""
-    def __init__(self, title, initial_value="0", parent=None):
+    """Tarjeta de métrica compacta y profesional."""
+
+    def __init__(self, title: str, initial_value: str = "—", parent=None):
         super().__init__(parent)
         self.setObjectName("metricCard")
-        self.setMinimumHeight(100)
-        
-        # Estilo base
         self.setProperty("class", "metric-card")
-        
+        self.setMinimumHeight(90)
+
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 16, 20, 16)
-        layout.setSpacing(8)
-        
-        # Título con ícono
-        title_layout = QHBoxLayout()
-        self.icon_label = QLabel("<img src='assets/icons/bar_chart.svg' width='16' height='16'>")
-        self.icon_label.setProperty("class", "icon-16-accent")
-        self.title_label = QLabel(title)
-        self.title_label.setFont(QFont("Segoe UI", 11, QFont.Weight.Medium))
-        self.title_label.setProperty("class", "text-adaptive")
-        title_layout.addWidget(self.icon_label)
-        title_layout.addWidget(self.title_label)
-        title_layout.addStretch()
-        
-        # Valor
+        layout.setContentsMargins(16, 14, 16, 14)
+        layout.setSpacing(4)
+
+        # Etiqueta de título (UPPERCASE, pequeña)
+        self.title_label = QLabel(title.upper())
+        self.title_label.setFont(QFont("Segoe UI", 10, QFont.Weight.Medium))
+        self.title_label.setProperty("class", "text-muted")
+
+        # Valor principal
         self.value_label = QLabel(initial_value)
-        self.value_label.setFont(QFont("Courier New", 24, QFont.Weight.Bold))
+        self.value_label.setFont(QFont("Segoe UI", 26, QFont.Weight.Bold))
         self.value_label.setProperty("class", "text-adaptive")
         self.value_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        
-        # Unidad o indicador
+
+        # Sub-indicador
         self.indicator = QLabel("")
-        self.indicator.setFont(QFont("Segoe UI", 9))
-        self.indicator.setProperty("class", "text-muted")
-        
-        layout.addLayout(title_layout)
+        self.indicator.setFont(QFont("Segoe UI", 11))
+        self.indicator.setProperty("class", "text-hint")
+
+        layout.addWidget(self.title_label)
         layout.addWidget(self.value_label)
         layout.addWidget(self.indicator)
-        layout.addStretch()
-        
-        # Animación de valor
-        self.anim_value = None
-        self._current_value = 0
-        
-    def set_value(self, value, unit=""):
-        """Actualiza el valor con animación"""
-        try:
-            # Extraer número del texto si es posible
-            if isinstance(value, str):
-                import re
-                numbers = re.findall(r'[\d.]+', value)
-                if numbers:
-                    new_num = float(numbers[0])
-                    self._animate_value(new_num, unit, value)
-                else:
-                    self.value_label.setText(value)
-            else:
-                self._animate_value(float(value), unit)
-        except:
-            self.value_label.setText(str(value))
-            
-    def _animate_value(self, new_value, unit="", formatted_text=None):
-        """Animación suave del cambio de valor"""
-        if self.anim_value:
-            self.anim_value.stop()
-            
-        # Si se proporciona texto formateado, usarlo directamente
-        if formatted_text:
-            self.value_label.setText(formatted_text)
+
+    def set_value(self, value, unit: str = ""):
+        """Actualiza el valor mostrado."""
+        if isinstance(value, (int, float)):
+            self.value_label.setText(f"{value}{unit}")
         else:
-            self.value_label.setText(f"{new_value}{unit}")
-            
-    def set_icon(self, icon):
-        """Cambia el ícono de la métrica"""
-        self.icon_label.setText(icon)
+            self.value_label.setText(str(value))
+
+    def set_icon(self, icon: str):
+        """Compatibilidad — ya no se usa ícono separado."""
+        pass

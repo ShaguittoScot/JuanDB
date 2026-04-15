@@ -17,6 +17,7 @@ from ui.views.import_export_view import ImportExportView
 from controllers.import_export_controller import ImportExportController
 from ui.views.security_view import SecurityView
 from controllers.security_controller import SecurityController
+from ui.views.settings_view import SettingsView
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -91,9 +92,11 @@ class MainWindow(QWidget):
         self.security_view = SecurityView()
         self.security_controller = SecurityController(self.security_view)
 
-        view_settings = ModuleView("Configuración",   "Ajusta los parámetros del sistema.")
+        self.settings_view = SettingsView()
+        self.settings_view.settings_saved.connect(self._on_settings_saved)
 
-        for v in [self.backup_view, self.import_export_view, self.security_view, self.monitor_view, view_settings]:
+        for v in [self.backup_view, self.import_export_view, self.security_view,
+                  self.monitor_view, self.settings_view]:
             self.stack.addWidget(v)
 
         ws_layout.addWidget(scroll_area)
@@ -109,6 +112,13 @@ class MainWindow(QWidget):
     def toggle_theme(self, is_dark: bool):
         self.is_dark_theme = is_dark
         self._apply_styles()
+
+    def _on_settings_saved(self, cfg: dict):
+        """Aplica configuración guardada desde SettingsView."""
+        # Tema: 0 = Oscuro, 1 = Claro
+        if "theme" in cfg:
+            self.is_dark_theme = (cfg["theme"] == 0)
+            self._apply_styles()
 
     def change_module(self, index: int, title: str):
         self.stack.setCurrentIndex(index)
