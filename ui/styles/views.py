@@ -10,7 +10,7 @@ def get_views_style(theme: dict) -> str:
             background-color: {theme['BG_ELEVATED']};
             border: 1px solid {theme['BORDER']};
             border-radius: 6px;
-            padding: 7px 10px;
+            padding: 10px 12px;
             color: {theme['TEXT_DARK']};
             font-size: 13px;
             min-height: 18px;
@@ -38,10 +38,10 @@ def get_views_style(theme: dict) -> str:
             border-top: 5px solid {theme['TEXT_MUTED']};
             margin-right: 10px;
         }}
-        QComboBox QAbstractItemView {{
-            background-color: {theme['BG_SURFACE']};
+        QComboBox QAbstractItemView, QComboBox QListView {{
+            background: {theme['BG_ELEVATED']};
+            background-color: {theme['BG_ELEVATED']};
             border: 1px solid {theme['BORDER']};
-            border-radius: 6px;
             selection-background-color: {theme['ACCENT_SOFT']};
             selection-color: {theme['ACCENT']};
             color: {theme['TEXT_DARK']};
@@ -117,10 +117,10 @@ def get_views_style(theme: dict) -> str:
             spacing: 8px;
         }}
         QCheckBox::indicator {{
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             border-radius: 4px;
-            border: 1px solid {theme['BORDER']};
+            border: 1.5px solid {theme['BORDER']};
             background-color: {theme['BG_ELEVATED']};
         }}
         QCheckBox::indicator:hover {{
@@ -363,9 +363,14 @@ def get_views_style(theme: dict) -> str:
             background-color: {theme['BG_ELEVATED']};
         }}
 
+        /* ── PAGE HEADER ──────────────────────────────────────────────── */
+        QFrame#pageHeader {{
+            border-bottom: 1px solid {theme['SEPARATOR']};
+        }}
+
         /* ── FORM CARD (tarjeta de formulario) ───────────────────────── */
         QFrame#formCard {{
-            background-color: {theme['BG_SURFACE']};
+            background-color: {theme['BG_CARD']};
             border: 1px solid {theme['BORDER']};
             border-radius: 10px;
         }}
@@ -373,5 +378,90 @@ def get_views_style(theme: dict) -> str:
             background-color: {theme['BG_BASE']};
             border: 1px solid {theme['BORDER']};
             border-radius: 10px;
+        }}
+        QFrame#terminalHeader {{
+            background-color: {theme['BG_SURFACE']};
+            border: none;
+            border-bottom: 1px solid {theme['BORDER']};
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }}
+
+        /* ── INPUT GROUP (input + botón fusionado) ────────────────────── */
+        QFrame#inputGroup {{
+            background-color: {theme['BG_ELEVATED']};
+            border: 1px solid {theme['BORDER']};
+            border-radius: 6px;
+        }}
+        QFrame#inputGroup:hover {{
+            border-color: {theme['TEXT_MUTED']};
+        }}
+        QFrame#inputGroup QComboBox,
+        QFrame#inputGroup QLineEdit {{
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            padding: 10px 12px;
+        }}
+        QFrame#inputGroup QComboBox:focus,
+        QFrame#inputGroup QLineEdit:focus {{
+            border: none;
+            background: transparent;
+        }}
+        QPushButton#inputGroupBtn {{
+            background-color: {theme['BG_SURFACE']};
+            border: none;
+            border-left: 1px solid {theme['BORDER']};
+            border-top-right-radius: 5px;
+            border-bottom-right-radius: 5px;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            color: {theme['TEXT_MUTED']};
+            font-weight: 500;
+            font-size: 12px;
+            padding: 10px 16px;
+            min-height: 18px;
+        }}
+        QPushButton#inputGroupBtn:hover {{
+            background-color: {theme['BG_ELEVATED']};
+            color: {theme['TEXT_DARK']};
+        }}
+
+        /* ── HERO BUTTON (acción principal destacada) ─────────────────── */
+        .btn-primary-hero {{
+            background-color: {theme['ACCENT']};
+            border: none;
+            border-radius: 8px;
+            color: #FFFFFF;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 12px 28px;
+            min-height: 22px;
+        }}
+        .btn-primary-hero:hover {{
+            background-color: {theme['ACCENT_DARK']};
+        }}
+        .btn-primary-hero:pressed {{
+            background-color: {theme['ACCENT_ALT']};
+        }}
+        .btn-primary-hero:disabled {{
+            background-color: {theme['BORDER']};
+            color: {theme['TEXT_HINT']};
+        }}
+
+        /* ── FORM LABEL (labels modernos, más pequeños) ───────────────── */
+        .form-label {{
+            color: {theme['TEXT_MUTED']};
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            padding-bottom: 0px;
+        }}
+
+        /* ── FORM DIVIDER ─────────────────────────────────────────────── */
+        .form-divider {{
+            background-color: {theme['SEPARATOR']};
+            border: none;
+            max-height: 1px;
         }}
     """

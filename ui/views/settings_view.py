@@ -20,6 +20,7 @@ from PyQt6.QtGui import QFont, QCursor
 
 from ui.colors import DARK_THEME as APP_COLORS
 from ui.components.server_status_checker import ServerStatusChecker
+from ui.components.help_icon import HelpIcon
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -435,7 +436,11 @@ class SettingsView(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        root.addWidget(self._page_header())
+        top_bar = QHBoxLayout()
+        top_bar.setContentsMargins(24, 18, 24, 0)
+        top_bar.addStretch()
+        top_bar.addWidget(HelpIcon("Personaliza el comportamiento, la apariencia y la conexión de JuanDB."))
+        root.addLayout(top_bar)
 
         # Cuerpo: lista izquierda + stack derecho
         body = QFrame()
@@ -449,26 +454,6 @@ class SettingsView(QWidget):
 
         root.addWidget(body, 1)
         root.addWidget(self._action_bar())
-
-    # ── Header ────────────────────────────────────────────────────────────────
-
-    def _page_header(self) -> QFrame:
-        h = QFrame()
-        h.setStyleSheet(f"border-bottom: 1px solid {APP_COLORS['SEPARATOR']};")
-        l = QVBoxLayout(h)
-        l.setContentsMargins(24, 18, 24, 14)
-        l.setSpacing(3)
-
-        t = QLabel("Configuración")
-        t.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-        t.setProperty("class", "view-title")
-
-        s = QLabel("Personaliza el comportamiento, la apariencia y la conexión de JuanDB.")
-        s.setFont(QFont("Segoe UI", 12))
-        s.setProperty("class", "text-muted")
-
-        l.addWidget(t); l.addWidget(s)
-        return h
 
     # ── Lista de categorías (izquierda) ───────────────────────────────────────
 

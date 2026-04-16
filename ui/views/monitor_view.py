@@ -16,6 +16,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QCursor, QColor
 
+from ui.components.help_icon import HelpIcon
+
 # ── Importar paleta desde el sistema de diseño ────────────────────────────────
 from ui.colors import DARK_THEME as APP_COLORS
 
@@ -77,7 +79,7 @@ class RealTimeChart(QFrame):
     Aplica el tema oscuro del sistema de diseño y elimina ruido visual.
     """
 
-    def __init__(self, title: str, parent=None):
+    def __init__(self, title: str, tooltip: str = "", parent=None):
         super().__init__(parent)
         self.setObjectName("formCard")
         self.setMinimumHeight(200)
@@ -105,6 +107,12 @@ class RealTimeChart(QFrame):
         self._title_lbl.setFont(QFont("Segoe UI", 12, QFont.Weight.DemiBold))
         self._title_lbl.setProperty("class", "view-subtitle-muted")
         hl.addWidget(self._title_lbl)
+        
+        if tooltip:
+            from ui.components.help_icon import HelpIcon
+            icon = HelpIcon(tooltip)
+            hl.addWidget(icon)
+
         hl.addStretch()
 
         # Slot para widget extras en el header (ej. leyenda)
@@ -163,7 +171,7 @@ class RealTimeChart(QFrame):
 
 class QueryLoadChart(RealTimeChart):
     def __init__(self, history_len: int = 60, parent=None):
-        super().__init__("Carga de consultas", parent)
+        super().__init__("Carga de consultas", "Muestra la cantidad de peticiones o consultas procesadas por el servidor por segundo (QPS).", parent)
         self._n = history_len
         self._data = [0.0] * self._n
         self._x = list(range(-self._n + 1, 1))
@@ -194,7 +202,7 @@ class QueryLoadChart(RealTimeChart):
 
 class CpuRamChart(RealTimeChart):
     def __init__(self, history_len: int = 60, parent=None):
-        super().__init__("CPU & RAM", parent)
+        super().__init__("CPU & RAM", "Monitorea el porcentaje del procesador y la memoria RAM consumidos en tiempo real.", parent)
         self._n = history_len
         self._cpu = [0.0] * self._n
         self._ram = [0.0] * self._n
@@ -233,7 +241,7 @@ class CpuRamChart(RealTimeChart):
 
 class NetworkChart(RealTimeChart):
     def __init__(self, bars: int = 30, parent=None):
-        super().__init__("Tráfico de red", parent)
+        super().__init__("Tráfico de red", "Visualiza el tráfico de entrada (RX) y salida (TX) en kilobytes por segundo.", parent)
         self._n = bars
         self._rx = [0.0] * self._n    # entrada (arriba)
         self._tx = [0.0] * self._n    # salida (abajo, negativo)
@@ -303,7 +311,6 @@ class MonitorView(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        root.addWidget(self._page_header())
         root.addWidget(self._controls_bar())
         root.addWidget(self._kpi_strip())
 
@@ -331,26 +338,6 @@ class MonitorView(QWidget):
 
         root.addWidget(charts, 1)
         root.addWidget(self._footer())
-
-    # ── Page header ───────────────────────────────────────────────────────────
-
-    def _page_header(self) -> QFrame:
-        h = QFrame()
-        h.setStyleSheet(f"border-bottom: 1px solid {APP_COLORS['SEPARATOR']};")
-        l = QVBoxLayout(h)
-        l.setContentsMargins(24, 18, 24, 14)
-        l.setSpacing(3)
-
-        t = QLabel("Monitoreo")
-        t.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-        t.setProperty("class", "view-title")
-
-        s = QLabel("Métricas de rendimiento del servidor MySQL en tiempo real — QPS, conexiones, CPU y red.")
-        s.setFont(QFont("Segoe UI", 12))
-        s.setProperty("class", "text-muted")
-
-        l.addWidget(t); l.addWidget(s)
-        return h
 
     # ── Barra de controles ────────────────────────────────────────────────────
 
@@ -388,6 +375,11 @@ class MonitorView(QWidget):
         lay.addWidget(self.status_label)
         lay.addStretch()
         lay.addWidget(self.error_label)
+        
+        help_icon = HelpIcon("Métricas de rendimiento del servidor MySQL en tiempo real — QPS, conexiones, CPU y red.")
+        help_icon.setStyleSheet(help_icon.styleSheet() + " margin-right: 8px;")
+        lay.addWidget(help_icon)
+        
         return bar
 
     # ── Franja de KPIs ────────────────────────────────────────────────────────

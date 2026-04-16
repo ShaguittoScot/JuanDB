@@ -1,20 +1,25 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QFrame, QLabel,
     QComboBox, QPushButton, QLineEdit, QProgressBar,
-    QCheckBox, QTabWidget
+    QCheckBox, QTabWidget, QSizePolicy, QStackedWidget
 )
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QFont, QCursor, QColor
+from PyQt6.QtGui import QFont, QCursor
 from datetime import datetime
+import qtawesome as qta
 
 from ui.components.animated_button import AnimatedButton
 from ui.components.log_text_edit import LogTextEdit
+from ui.components.backup_form_card import BackupFormCard
+from ui.components.help_icon import HelpIcon
+from ui.colors import DARK_THEME as APP_COLORS
 
 
 class BackupView(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMinimumSize(860, 560)
+        self._active_mode = "backup"
         self._build_ui()
         self._setup_connections()
 
@@ -26,51 +31,58 @@ class BackupView(QWidget):
         self.btn_select_schema.clicked.connect(self._on_select_schema)
         self.btn_select_data.clicked.connect(self._on_select_data)
         self.btn_restore.clicked.connect(self._on_restore_clicked)
+        self.btn_cancel.clicked.connect(self._on_cancel_backup)
 
     # ══════════════════════════════════════════════════════════════════════════
     # Construcción principal
     # ══════════════════════════════════════════════════════════════════════════
 
     def _build_ui(self):
-        # Widgets que el controller necesita (inicialización temprana)
-        self.combo_db          = QComboBox()
-        self.path_input        = QLineEdit()
-        self.btn_refresh       = QPushButton()
-        self.btn_select_dir    = QPushButton()
-        self.combo_db_restore  = QComboBox()
+        # Widgets de restauración (inicialización temprana para el controller)
+        self.combo_db_restore   = QComboBox()
         self.combo_db_restore.setEditable(True)
         self.combo_mode_restore = QComboBox()
-        self.schema_input      = QLineEdit()
-        self.data_input        = QLineEdit()
+        self.schema_input       = QLineEdit()
+        self.data_input         = QLineEdit()
         self.btn_refresh_restore = QPushButton()
         self.btn_select_schema   = QPushButton()
         self.btn_select_data     = QPushButton()
 
-        root = QVBoxLayout(self)
+        root = QHBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        # Page header
-        root.addWidget(self._page_header())
+        # Segmented Control / Header Layout
+        header_lay = QHBoxLayout()
+        header_lay.setContentsMargins(0, 0, 0, 0)
+        
+        spacer_left = QWidget()
+        spacer_left.setFixedWidth(28)  # Compensar ancho del HelpIcon + margenes
+        header_lay.addWidget(spacer_left)
+        
+        header_lay.addWidget(self._mode_toggle_bar(), 1)
+        
+        header_lay.addWidget(HelpIcon("Crea y restaura copias de seguridad de tus bases de datos MySQL."))
 
-        # Tab bar + contenido
-        self.tabs = QTabWidget()
-        self.tabs.setDocumentMode(True)          # quita el borde del panel
+        self.stack = QStackedWidget()
+        self.stack.addWidget(self._tab_create())
+        self.stack.addWidget(self._tab_restore())
 
-        self.tabs.addTab(self._tab_create(),   "  Crear respaldo  ")
-        self.tabs.addTab(self._tab_restore(),  "  Restaurar  ")
-        self.tabs.addTab(self._tab_log(),      "  Registro  ")
+        left_col = QFrame()
+        wl = QVBoxLayout(left_col)
+        wl.setContentsMargins(32, 24, 24, 24)
+        wl.setSpacing(24)
+        wl.addLayout(header_lay)
+        wl.addWidget(self.stack)
 
-        wrapper = QFrame()
-        wl = QVBoxLayout(wrapper)
-        wl.setContentsMargins(24, 0, 24, 24)
-        wl.setSpacing(0)
-        wl.addWidget(self.tabs)
-
-        root.addWidget(wrapper, 1)
+        root.addWidget(left_col, 2)
+        
+        # Columna de Registro
+        log_panel = self._create_log_panel()
+        root.addWidget(log_panel, 1)
 
     # ══════════════════════════════════════════════════════════════════════════
-    # TAB 1 — Crear respaldo
+    # TAB 1 — Crear respaldo  (delegado a BackupFormCard)
     # ══════════════════════════════════════════════════════════════════════════
 
     def _tab_create(self) -> QWidget:
@@ -80,95 +92,34 @@ class BackupView(QWidget):
         outer.setContentsMargins(0, 20, 0, 0)
         outer.setSpacing(0)
 
-        # Card
-        card = QFrame()
-        card.setObjectName("formCard")
-        cl = QVBoxLayout(card)
-        cl.setContentsMargins(28, 24, 28, 24)
-        cl.setSpacing(18)
+        # Layout centrado para la card
+        center = QHBoxLayout()
+        center.setContentsMargins(0, 0, 0, 0)
+        center.addStretch()
 
-        # — Base de datos —
-        cl.addWidget(self._group_title("Base de datos"))
-        db_row = QHBoxLayout(); db_row.setSpacing(8)
-        self.combo_db.setPlaceholderText("Seleccionar base de datos...")
-        self.btn_refresh.setText("↺")
-        self.btn_refresh.setFixedWidth(34)
-        self.btn_refresh.setToolTip("Actualizar lista")
-        self.btn_refresh.setProperty("class", "btn-secondary-animated")
-        self.btn_refresh.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        db_row.addWidget(self.combo_db, 1)
-        db_row.addWidget(self.btn_refresh)
-        cl.addLayout(db_row)
+        self._form_card = BackupFormCard()
+        center.addWidget(self._form_card)
 
-        # — Directorio —
-        cl.addWidget(self._group_title("Directorio de destino"))
-        dir_row = QHBoxLayout(); dir_row.setSpacing(8)
-        self.path_input.setPlaceholderText("Ej.  C:/backups/mysql")
-        self.btn_select_dir.setText("Examinar")
-        self.btn_select_dir.setProperty("class", "btn-secondary-animated")
-        self.btn_select_dir.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        dir_row.addWidget(self.path_input, 1)
-        dir_row.addWidget(self.btn_select_dir)
-        cl.addLayout(dir_row)
+        center.addStretch()
+        outer.addStretch()  # Centrado vertical superior
+        outer.addLayout(center)
+        outer.addStretch()  # Centrado vertical inferior
 
-        # — Nombre opcional —
-        cl.addWidget(self._group_title("Nombre del archivo  \u00b7  opcional"))
-        self.custom_name = QLineEdit()
-        self.custom_name.setPlaceholderText("Se genera automáticamente si se deja vacío")
-        cl.addWidget(self.custom_name)
+        # ── Proxy de widgets para compatibilidad con BackupController ──
+        self.combo_db          = self._form_card.combo_db
+        self.path_input        = self._form_card.path_input
+        self.custom_name       = self._form_card.custom_name
+        self.btn_refresh       = self._form_card.btn_refresh
+        self.btn_select_dir    = self._form_card.btn_select_dir
+        self.chk_compress      = self._form_card.chk_compress
+        self.chk_drop_tables   = self._form_card.chk_drop_tables
+        self.chk_create_db     = self._form_card.chk_create_db
+        self.progress_bar      = self._form_card.progress_bar
+        self.stats_last_backup = self._form_card.stats_last_backup
+        self.stats_backup_count = self._form_card.stats_backup_count
+        self.btn_cancel        = self._form_card.btn_cancel
+        self.btn_backup        = self._form_card.btn_backup
 
-        # Divisor
-        cl.addWidget(self._hdiv())
-
-        # — Opciones —
-        cl.addWidget(self._group_title("Opciones"))
-        opts = QHBoxLayout(); opts.setSpacing(24)
-        self.chk_compress    = QCheckBox("Comprimir (.zip)")
-        self.chk_compress.setChecked(True)
-        self.chk_drop_tables = QCheckBox("DROP TABLE IF EXISTS")
-        self.chk_create_db   = QCheckBox("CREATE DATABASE")
-        for chk in (self.chk_compress, self.chk_drop_tables, self.chk_create_db):
-            chk.setFont(QFont("Segoe UI", 12))
-            opts.addWidget(chk)
-        opts.addStretch()
-        cl.addLayout(opts)
-
-        # — Progress —
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setFixedHeight(4)
-        self.progress_bar.setVisible(False)
-        cl.addWidget(self.progress_bar)
-
-        # — Stats —
-        stats = QHBoxLayout()
-        self.stats_last_backup  = QLabel("Último backup: —")
-        self.stats_backup_count = QLabel("Realizados: 0")
-        for lbl in (self.stats_last_backup, self.stats_backup_count):
-            lbl.setFont(QFont("Segoe UI", 11))
-            lbl.setProperty("class", "text-hint")
-        stats.addWidget(self.stats_last_backup)
-        stats.addStretch()
-        stats.addWidget(self.stats_backup_count)
-        cl.addLayout(stats)
-
-        # — Botones — full-width al final de la card
-        btn_row = QHBoxLayout(); btn_row.setSpacing(8)
-        self.btn_cancel = QPushButton("Cancelar")
-        self.btn_cancel.setProperty("class", "btn-secondary-animated")
-        self.btn_cancel.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.btn_cancel.setVisible(False)
-        self.btn_cancel.clicked.connect(self._on_cancel_backup)
-
-        self.btn_backup = AnimatedButton("Crear copia de seguridad")
-        self.btn_backup.setProperty("class", "btn-primary")
-
-        btn_row.addWidget(self.btn_cancel)
-        btn_row.addStretch()
-        btn_row.addWidget(self.btn_backup)
-        cl.addLayout(btn_row)
-
-        outer.addWidget(card)
-        outer.addStretch()
         return page
 
     # ══════════════════════════════════════════════════════════════════════════
@@ -182,54 +133,92 @@ class BackupView(QWidget):
         outer.setContentsMargins(0, 20, 0, 0)
         outer.setSpacing(0)
 
+        # Layout centrado
+        center = QHBoxLayout()
+        center.setContentsMargins(0, 0, 0, 0)
+        center.addStretch()
+
         card = QFrame()
         card.setObjectName("formCard")
+        card.setFixedWidth(600)
+        card.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
+        card.setStyleSheet(f"""
+            QFrame#formCard {{
+                background-color: {APP_COLORS['BG_CARD']};
+                border-radius: 12px;
+                border: 1px solid {APP_COLORS['BORDER']};
+            }}
+        """)
+        
         cl = QVBoxLayout(card)
-        cl.setContentsMargins(28, 24, 28, 24)
+        cl.setContentsMargins(32, 32, 32, 32)
         cl.setSpacing(18)
+        
+        title = QLabel("Restaurar Base de Datos")
+        title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+        title.setStyleSheet(f"color: {APP_COLORS['TEXT_LIGHT']}; border: none;")
+        cl.addWidget(title)
+        
+        cl.addSpacing(8)
 
         # — BD destino —
-        cl.addWidget(self._group_title("Base de datos destino"))
-        bd_row = QHBoxLayout(); bd_row.setSpacing(8)
+        cl.addWidget(self._field_label("Base de datos destino"))
         self.combo_db_restore.setPlaceholderText("Nombre de BD nueva o existente...")
-        self.btn_refresh_restore.setText("↺")
-        self.btn_refresh_restore.setFixedWidth(34)
-        self.btn_refresh_restore.setProperty("class", "btn-secondary-animated")
+        self.btn_refresh_restore.setIcon(qta.icon('fa5s.sync-alt', color=APP_COLORS['TEXT_MUTED']))
+        self.btn_refresh_restore.setFixedWidth(42)
         self.btn_refresh_restore.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        bd_row.addWidget(self.combo_db_restore, 1)
-        bd_row.addWidget(self.btn_refresh_restore)
-        cl.addLayout(bd_row)
+        
+        db_wrapper = QFrame()
+        db_wrapper.setObjectName("inputGroup")
+        dw_lay = QHBoxLayout(db_wrapper)
+        dw_lay.setContentsMargins(0, 0, 0, 0)
+        dw_lay.setSpacing(0)
+        dw_lay.addWidget(self.combo_db_restore, 1)
+        dw_lay.addWidget(self.btn_refresh_restore)
+        
+        cl.addLayout(self._field_row('fa5s.database', db_wrapper))
 
         # — Modalidad —
-        cl.addWidget(self._group_title("Modalidad"))
+        cl.addWidget(self._field_label("Modalidad"))
         self.combo_mode_restore.addItems(["Archivo único (.sql)", "Esquema y datos separados"])
         self.combo_mode_restore.currentIndexChanged.connect(self._toggle_restore_mode)
-        cl.addWidget(self.combo_mode_restore)
+        cl.addLayout(self._field_row('fa5s.tools', self.combo_mode_restore))
 
         # — Archivo SQL —
-        cl.addWidget(self._group_title("Archivo SQL"))
-        sch_row = QHBoxLayout(); sch_row.setSpacing(8)
+        cl.addWidget(self._field_label("Archivo SQL"))
         self.schema_input.setPlaceholderText("Seleccionar archivo .sql...")
-        self.btn_select_schema.setText("Buscar")
-        self.btn_select_schema.setProperty("class", "btn-secondary-animated")
+        self.btn_select_schema.setText("  Examinar  ")
         self.btn_select_schema.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        sch_row.addWidget(self.schema_input, 1)
-        sch_row.addWidget(self.btn_select_schema)
-        cl.addLayout(sch_row)
+        
+        sch_wrapper = QFrame()
+        sch_wrapper.setObjectName("inputGroup")
+        sw_lay = QHBoxLayout(sch_wrapper)
+        sw_lay.setContentsMargins(0, 0, 0, 0)
+        sw_lay.setSpacing(0)
+        sw_lay.addWidget(self.schema_input, 1)
+        sw_lay.addWidget(self.btn_select_schema)
+        
+        cl.addLayout(self._field_row('fa5s.file-code', sch_wrapper))
 
         # — Datos separados (oculto) —
         self.data_section = QFrame()
         ds = QVBoxLayout(self.data_section)
         ds.setContentsMargins(0, 0, 0, 0); ds.setSpacing(8)
-        ds.addWidget(self._group_title("Archivo de datos"))
-        data_row = QHBoxLayout(); data_row.setSpacing(8)
+        ds.addWidget(self._field_label("Archivo de datos"))
+        
         self.data_input.setPlaceholderText("Seleccionar archivo de datos .sql...")
-        self.btn_select_data.setText("Buscar")
-        self.btn_select_data.setProperty("class", "btn-secondary-animated")
+        self.btn_select_data.setText("  Examinar  ")
         self.btn_select_data.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        data_row.addWidget(self.data_input, 1)
-        data_row.addWidget(self.btn_select_data)
-        ds.addLayout(data_row)
+        
+        dat_wrapper = QFrame()
+        dat_wrapper.setObjectName("inputGroup")
+        dw_lay = QHBoxLayout(dat_wrapper)
+        dw_lay.setContentsMargins(0, 0, 0, 0)
+        dw_lay.setSpacing(0)
+        dw_lay.addWidget(self.data_input, 1)
+        dw_lay.addWidget(self.btn_select_data)
+        
+        ds.addLayout(self._field_row('fa5s.file', dat_wrapper))
         self.data_section.setVisible(False)
         cl.addWidget(self.data_section)
 
@@ -237,14 +226,33 @@ class BackupView(QWidget):
         cl.addWidget(self._hdiv())
 
         # — Advertencia —
-        warn = QLabel(
-            "⚠   Esta operación sobreescribirá todos los datos existentes "
+        warn_frame = QFrame()
+        warn_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: rgba(210, 153, 34, 0.08);
+                border: 1px solid rgba(210, 153, 34, 0.30);
+                border-radius: 8px;
+            }}
+        """)
+        wl = QHBoxLayout(warn_frame)
+        wl.setContentsMargins(14, 12, 14, 12)
+        wl.setSpacing(12)
+
+        warn_icon = QLabel()
+        warn_icon.setPixmap(qta.icon('fa5s.exclamation-triangle', color=APP_COLORS['WARNING']).pixmap(20, 20))
+        warn_icon.setFixedWidth(20)
+        warn_icon.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        warn_text = QLabel(
+            "Esta operación sobreescribirá todos los datos existentes "
             "en la base de datos destino. Esta acción no se puede deshacer."
         )
-        warn.setProperty("class", "warning-box")
-        warn.setWordWrap(True)
-        warn.setFont(QFont("Segoe UI", 12))
-        cl.addWidget(warn)
+        warn_text.setFont(QFont("Segoe UI", 11))
+        warn_text.setStyleSheet(f"color: {APP_COLORS['WARNING']}; border: none;")
+        warn_text.setWordWrap(True)
+
+        wl.addWidget(warn_icon); wl.addWidget(warn_text, 1)
+        cl.addWidget(warn_frame)
 
         # — Progress —
         self.progress_bar_restore = QProgressBar()
@@ -253,23 +261,119 @@ class BackupView(QWidget):
         cl.addWidget(self.progress_bar_restore)
 
         # — Botón —
-        self.btn_restore = AnimatedButton("Restaurar backup")
-        self.btn_restore.setProperty("class", "btn-secondary-animated")
-        cl.addWidget(self.btn_restore)   # full-width
+        self.btn_restore = AnimatedButton("Ejecutar Restauración")
+        self.btn_restore.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        self.btn_restore.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {APP_COLORS['WARNING']};
+                color: #FFFFFF;
+                border-radius: 6px;
+                padding: 10px 0;
+            }}
+            QPushButton:hover {{ background-color: #B07D15; }}
+        """)
+        cl.addWidget(self.btn_restore)
 
-        outer.addWidget(card)
-        outer.addStretch()
+        center.addWidget(card)
+        center.addStretch()
+        outer.addStretch()  # Centrado vertical superior
+        outer.addLayout(center)
+        outer.addStretch()  # Centrado vertical inferior
         return page
 
     # ══════════════════════════════════════════════════════════════════════════
-    # TAB 3 — Registro / Log
+    # Segmented Control Lógica
     # ══════════════════════════════════════════════════════════════════════════
 
-    def _tab_log(self) -> QWidget:
+    def _mode_toggle_bar(self) -> QWidget:
+        container = QWidget()
+        lay = QHBoxLayout(container)
+        lay.setContentsMargins(0, 0, 0, 0)
+        
+        pill = QFrame()
+        pill.setFixedHeight(40)
+        pill.setStyleSheet(f"""
+            QFrame {{
+                background-color: {APP_COLORS['BG_SURFACE']};
+                border: 1px solid {APP_COLORS['BORDER']};
+                border-radius: 8px;
+            }}
+        """)
+        pill_lay = QHBoxLayout(pill)
+        pill_lay.setContentsMargins(4, 4, 4, 4)
+        pill_lay.setSpacing(2)
+
+        self.btn_mode_backup = QPushButton("Crear respaldo")
+        self.btn_mode_restore = QPushButton("Restaurar")
+
+        for btn in (self.btn_mode_backup, self.btn_mode_restore):
+            btn.setFixedHeight(30)
+            btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Medium))
+            btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+            btn.setCheckable(True)
+            pill_lay.addWidget(btn)
+
+        self.btn_mode_backup.setChecked(True)
+        self.btn_mode_backup.clicked.connect(lambda: self._switch_mode("backup"))
+        self.btn_mode_restore.clicked.connect(lambda: self._switch_mode("restore"))
+
+        self._style_toggle_btns()
+
+        lay.addStretch()
+        lay.addWidget(pill)
+        lay.addStretch()
+        
+        return container
+
+    def _switch_mode(self, mode: str):
+        if self._active_mode == mode:
+            return
+        self._active_mode = mode
+        idx = 0 if mode == "backup" else 1
+        self.stack.setCurrentIndex(idx)
+        
+        self.btn_mode_backup.setChecked(mode == "backup")
+        self.btn_mode_restore.setChecked(mode == "restore")
+        self._style_toggle_btns()
+
+    def _style_toggle_btns(self):
+        active_style = f"""
+            QPushButton {{
+                background-color: {APP_COLORS['ACCENT']};
+                color: #FFFFFF;
+                border: none;
+                border-radius: 6px;
+                padding: 0 24px;
+                font-weight: 600;
+            }}
+        """
+        inactive_style = f"""
+            QPushButton {{
+                background-color: transparent;
+                color: {APP_COLORS['TEXT_MUTED']};
+                border: none;
+                border-radius: 6px;
+                padding: 0 24px;
+                font-weight: 500;
+            }}
+            QPushButton:hover {{ color: {APP_COLORS['TEXT_LIGHT']}; }}
+        """
+        if self._active_mode == "backup":
+            self.btn_mode_backup.setStyleSheet(active_style)
+            self.btn_mode_restore.setStyleSheet(inactive_style)
+        else:
+            self.btn_mode_backup.setStyleSheet(inactive_style)
+            self.btn_mode_restore.setStyleSheet(active_style)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # Panel lateral — Registro / Log
+    # ══════════════════════════════════════════════════════════════════════════
+
+    def _create_log_panel(self) -> QWidget:
         page = QWidget()
         page.setStyleSheet("background: transparent;")
         outer = QVBoxLayout(page)
-        outer.setContentsMargins(0, 20, 0, 0)
+        outer.setContentsMargins(12, 24, 32, 24)
         outer.setSpacing(0)
 
         card = QFrame()
@@ -281,14 +385,7 @@ class BackupView(QWidget):
         # Header de la terminal
         term_hdr = QFrame()
         term_hdr.setFixedHeight(38)
-        term_hdr.setStyleSheet("""
-            QFrame {
-                background-color: #161B22;
-                border-bottom: 1px solid #30363D;
-                border-top-left-radius: 10px;
-                border-top-right-radius: 10px;
-            }
-        """)
+        term_hdr.setObjectName("terminalHeader")
         th_lay = QHBoxLayout(term_hdr)
         th_lay.setContentsMargins(14, 0, 14, 0)
 
@@ -301,7 +398,7 @@ class BackupView(QWidget):
 
         term_title = QLabel("Salida del proceso")
         term_title.setFont(QFont("Segoe UI", 11))
-        term_title.setStyleSheet("color: #7D8590;")
+        term_title.setProperty("class", "text-muted")
         th_lay.addWidget(term_title)
         th_lay.addStretch()
 
@@ -326,32 +423,34 @@ class BackupView(QWidget):
     # Helpers visuales
     # ══════════════════════════════════════════════════════════════════════════
 
-    def _page_header(self) -> QFrame:
-        h = QFrame()
-        h.setStyleSheet("QFrame { border-bottom: 1px solid #21262D; }")
-        l = QVBoxLayout(h)
-        l.setContentsMargins(24, 18, 24, 0)
-        l.setSpacing(3)
-        t = QLabel("Backups")
-        t.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-        t.setProperty("class", "view-title")
-        s = QLabel("Crea y restaura copias de seguridad de tus bases de datos MySQL.")
-        s.setFont(QFont("Segoe UI", 12))
-        s.setProperty("class", "text-muted")
-        l.addWidget(t); l.addWidget(s)
-        return h
-
-    def _group_title(self, text: str) -> QLabel:
+    def _field_label(self, text: str) -> QLabel:
+        """Label moderno: más pequeño que el input, color suave."""
         lbl = QLabel(text)
-        lbl.setFont(QFont("Segoe UI", 11, QFont.Weight.Medium))
-        lbl.setProperty("class", "text-muted")
+        lbl.setFont(QFont("Segoe UI", 10, QFont.Weight.Medium))
+        lbl.setProperty("class", "form-label")
         return lbl
 
     def _hdiv(self) -> QFrame:
+        """Separador horizontal usando token SEPARATOR."""
         d = QFrame()
         d.setFixedHeight(1)
-        d.setStyleSheet("background-color: #21262D; border: none;")
+        d.setStyleSheet(f"background-color: {APP_COLORS['SEPARATOR']}; border: none;")
         return d
+
+    def _field_row(self, icon_name: str, widget: QWidget) -> QHBoxLayout:
+        row = QHBoxLayout()
+        row.setSpacing(12)
+        
+        icon_lbl = QLabel()
+        pm = qta.icon(icon_name, color=APP_COLORS['TEXT_MUTED']).pixmap(18, 18)
+        icon_lbl.setPixmap(pm)
+        icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon_lbl.setFixedWidth(24)
+        icon_lbl.setStyleSheet("border: none; background: transparent;")
+        
+        row.addWidget(icon_lbl)
+        row.addWidget(widget, 1)
+        return row
 
     # ══════════════════════════════════════════════════════════════════════════
     # Lógica
@@ -406,8 +505,6 @@ class BackupView(QWidget):
         self.btn_backup.setEnabled(False)
         self.btn_cancel.setVisible(True)
         self._log(f"Iniciando backup de '{self.combo_db.currentText()}'...", "process")
-        # Redirigir al tab de log para que el usuario vea el progreso
-        self.tabs.setCurrentIndex(2)
         QTimer.singleShot(3000, self._sim_backup_done)
 
     def _sim_backup_done(self):
@@ -435,7 +532,6 @@ class BackupView(QWidget):
         if not self.schema_input.text():
             self._log("Selecciona el archivo SQL a restaurar", "error"); return
         self._log(f"Iniciando restauración en '{self.combo_db_restore.currentText()}'...", "process")
-        self.tabs.setCurrentIndex(2)
         self.progress_bar_restore.setVisible(True)
         self.progress_bar_restore.setValue(0)
         QTimer.singleShot(3000, lambda: (

@@ -6,6 +6,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont, QCursor
 
+from ui.components.help_icon import HelpIcon
+
 from ui.components.animated_button import AnimatedButton
 from ui.components.password_indicator import PasswordStrengthIndicator
 
@@ -34,7 +36,11 @@ class SecurityView(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        root.addWidget(self._page_header())
+        top_bar = QHBoxLayout()
+        top_bar.setContentsMargins(24, 18, 24, 0)
+        top_bar.addStretch()
+        top_bar.addWidget(HelpIcon("Administra cuentas de usuario MySQL, hosts autorizados y privilegios de acceso."))
+        root.addLayout(top_bar)
 
         body = QFrame()
         bl = QHBoxLayout(body)
@@ -44,27 +50,6 @@ class SecurityView(QWidget):
         bl.addWidget(self._form_card(), 2)
 
         root.addWidget(body, 1)
-
-    # ── Page header ───────────────────────────────────────────────────────────
-
-    def _page_header(self) -> QFrame:
-        h = QFrame()
-        l = QVBoxLayout(h)
-        l.setContentsMargins(24, 18, 24, 14)
-        l.setSpacing(3)
-
-        title = QLabel("Seguridad")
-        title.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-        title.setProperty("class", "view-title")
-
-        sub = QLabel("Administra cuentas de usuario MySQL, hosts autorizados y privilegios de acceso.")
-        sub.setFont(QFont("Segoe UI", 12))
-        sub.setProperty("class", "text-muted")
-
-        l.addWidget(title)
-        l.addWidget(sub)
-        h.setStyleSheet("border-bottom: 1px solid #21262D;")
-        return h
 
     # ─────────────────────────────────────────────────────────────────────────
     # Card izquierda — Tabla de usuarios

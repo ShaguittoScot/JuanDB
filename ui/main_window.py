@@ -13,7 +13,7 @@ from ui.views.backup_view import BackupView
 from controllers.backup_controller import BackupController
 from ui.views.monitor_view import MonitorView
 from controllers.monitor_controller import MonitorController
-from ui.views.import_export_view import ImportExportView
+from ui.views.transfer_view import TransferView
 from controllers.import_export_controller import ImportExportController
 from ui.views.security_view import SecurityView
 from controllers.security_controller import SecurityController
@@ -74,20 +74,14 @@ class MainWindow(QWidget):
         self.stack = QStackedWidget()
         self.stack.setObjectName("stack")
 
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setWidget(self.stack)
-        scroll_area.setFrameShape(QFrame.Shape.NoFrame)
-        scroll_area.setStyleSheet("background-color: transparent;")
-
         self.backup_view = BackupView()
         self.backup_controller = BackupController(self.backup_view)
         
         self.monitor_view = MonitorView()
         self.monitor_controller = MonitorController(self.monitor_view)
         
-        self.import_export_view = ImportExportView()
-        self.import_export_controller = ImportExportController(self.import_export_view)
+        self.transfer_view = TransferView()
+        self.import_export_controller = ImportExportController(self.transfer_view)
         
         self.security_view = SecurityView()
         self.security_controller = SecurityController(self.security_view)
@@ -95,11 +89,11 @@ class MainWindow(QWidget):
         self.settings_view = SettingsView()
         self.settings_view.settings_saved.connect(self._on_settings_saved)
 
-        for v in [self.backup_view, self.import_export_view, self.security_view,
+        for v in [self.backup_view, self.transfer_view, self.security_view,
                   self.monitor_view, self.settings_view]:
             self.stack.addWidget(v)
 
-        ws_layout.addWidget(scroll_area)
+        ws_layout.addWidget(self.stack)
 
         layout.addWidget(self.topbar)
         layout.addWidget(topbar_line)
