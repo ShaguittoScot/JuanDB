@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import (
     QStackedWidget, QFrame, QApplication, QScrollArea
 )
 from PyQt6.QtCore import Qt
-from ui.colors import LIGHT_THEME, DARK_THEME
+from ui.colors import LIGHT_THEME, DARK_THEME, CYBERPUNK_THEME
 from ui.styles import get_stylesheet
 
 from ui.components.sidebar import Sidebar, NAV_ITEMS
@@ -26,7 +26,7 @@ class MainWindow(QWidget):
         self.setGeometry(100, 100, 1100, 660)
         self.setMinimumSize(800, 500)
 
-        self.is_dark_theme = True
+        self.theme_mode = 0 # 0: Dark, 1: Cyber, 2: Light
 
         self._build_ui()
         self._apply_styles()
@@ -58,7 +58,7 @@ class MainWindow(QWidget):
         layout.setSpacing(0)
 
         self.topbar = TopBar()
-        self.topbar.theme_toggled.connect(self.toggle_theme)
+        self.topbar.theme_changed.connect(self.change_theme)
 
         topbar_line = QFrame()
         topbar_line.setObjectName("topBarLine")
@@ -103,15 +103,14 @@ class MainWindow(QWidget):
 
     # ── Lógica ───────────────────────────────────────────────────────────────
 
-    def toggle_theme(self, is_dark: bool):
-        self.is_dark_theme = is_dark
+    def change_theme(self, mode: int):
+        self.theme_mode = mode
         self._apply_styles()
 
     def _on_settings_saved(self, cfg: dict):
         """Aplica configuración guardada desde SettingsView."""
-        # Tema: 0 = Oscuro, 1 = Claro
         if "theme" in cfg:
-            self.is_dark_theme = (cfg["theme"] == 0)
+            self.theme_mode = cfg["theme"]
             self._apply_styles()
 
     def change_module(self, index: int, title: str):
@@ -121,7 +120,12 @@ class MainWindow(QWidget):
     # ── Estilos ──────────────────────────────────────────────────────────────
 
     def _apply_styles(self):
-        theme = DARK_THEME if self.is_dark_theme else LIGHT_THEME
+        themes = {
+            0: DARK_THEME,
+            1: CYBERPUNK_THEME,
+            2: LIGHT_THEME
+        }
+        theme = themes.get(self.theme_mode, DARK_THEME)
         self.setStyleSheet(get_stylesheet(theme))
 
 

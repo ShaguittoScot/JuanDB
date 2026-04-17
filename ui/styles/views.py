@@ -20,7 +20,7 @@ def get_views_style(theme: dict) -> str:
             border-color: {theme['TEXT_MUTED']};
         }}
         QComboBox:focus, QLineEdit:focus {{
-            border-color: {theme['ACCENT']};
+            border: 2px solid {theme['ACCENT']};
             background-color: {theme['BG_SURFACE']};
         }}
         QComboBox:disabled, QLineEdit:disabled {{
@@ -356,7 +356,7 @@ def get_views_style(theme: dict) -> str:
 
         /* ── BOTONES GENÉRICOS ────────────────────────────────────────── */
         .btn-primary {{
-            background-color: {theme['ACCENT']};
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 {theme['ACCENT_SECONDARY']}, stop:1 {theme['ACCENT']});
             border: none;
             border-radius: 6px;
             color: #FFFFFF;
@@ -519,7 +519,7 @@ def get_views_style(theme: dict) -> str:
 
         /* ── HERO BUTTON (acción principal destacada) ─────────────────── */
         .btn-primary-hero {{
-            background-color: {theme['ACCENT']};
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 {theme['ACCENT_SECONDARY']}, stop:1 {theme['ACCENT']});
             border: none;
             border-radius: 8px;
             color: #FFFFFF;

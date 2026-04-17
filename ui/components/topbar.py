@@ -3,14 +3,14 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
 
 class TopBar(QFrame):
-    theme_toggled = pyqtSignal(bool)
+    theme_changed = pyqtSignal(int) # 0: Dark, 1: Cyber, 2: Light
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("topBar")
         self.setFixedHeight(56)
 
-        self.is_dark_theme = True
+        self.theme_mode = 0 # 0: Dark, 1: Cyber, 2: Light
         self._build_ui()
 
     def _build_ui(self):
@@ -56,6 +56,14 @@ class TopBar(QFrame):
         self.current_module_label.setText(title)
 
     def _on_theme_toggle(self):
-        self.is_dark_theme = not self.is_dark_theme
-        self.btn_theme_toggle.setText("☀  Claro" if self.is_dark_theme else "🌙  Oscuro")
-        self.theme_toggled.emit(self.is_dark_theme)
+        self.theme_mode = (self.theme_mode + 1) % 3
+        
+        modes = {
+            0: ("🌙  Oscuro", "Professional Dark"),
+            1: ("⚡  Cyberpunk", "Neon Style"),
+            2: ("☀  Claro", "Professional Light")
+        }
+        
+        btn_text, _ = modes[self.theme_mode]
+        self.btn_theme_toggle.setText(btn_text)
+        self.theme_changed.emit(self.theme_mode)
