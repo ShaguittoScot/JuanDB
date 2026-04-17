@@ -12,7 +12,6 @@ from ui.components.animated_button import AnimatedButton
 from ui.components.log_text_edit import LogTextEdit
 from ui.components.backup_form_card import BackupFormCard
 from ui.components.help_icon import HelpIcon
-from ui.colors import DARK_THEME as APP_COLORS
 
 
 class BackupView(QWidget):
@@ -87,10 +86,9 @@ class BackupView(QWidget):
 
     def _tab_create(self) -> QWidget:
         page = QWidget()
-        page.setStyleSheet("background: transparent;")
         outer = QVBoxLayout(page)
-        outer.setContentsMargins(0, 20, 0, 0)
-        outer.setSpacing(0)
+        outer.setContentsMargins(32, 32, 32, 32)
+        outer.setSpacing(18)
 
         # Layout centrado para la card
         center = QHBoxLayout()
@@ -128,10 +126,9 @@ class BackupView(QWidget):
 
     def _tab_restore(self) -> QWidget:
         page = QWidget()
-        page.setStyleSheet("background: transparent;")
         outer = QVBoxLayout(page)
-        outer.setContentsMargins(0, 20, 0, 0)
-        outer.setSpacing(0)
+        outer.setContentsMargins(32, 32, 32, 32)
+        outer.setSpacing(18)
 
         # Layout centrado
         center = QHBoxLayout()
@@ -142,13 +139,6 @@ class BackupView(QWidget):
         card.setObjectName("formCard")
         card.setFixedWidth(600)
         card.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
-        card.setStyleSheet(f"""
-            QFrame#formCard {{
-                background-color: {APP_COLORS['BG_CARD']};
-                border-radius: 12px;
-                border: 1px solid {APP_COLORS['BORDER']};
-            }}
-        """)
         
         cl = QVBoxLayout(card)
         cl.setContentsMargins(32, 32, 32, 32)
@@ -156,7 +146,7 @@ class BackupView(QWidget):
         
         title = QLabel("Restaurar Base de Datos")
         title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
-        title.setStyleSheet(f"color: {APP_COLORS['TEXT_LIGHT']}; border: none;")
+        title.setProperty("class", "view-title")
         cl.addWidget(title)
         
         cl.addSpacing(8)
@@ -164,7 +154,7 @@ class BackupView(QWidget):
         # — BD destino —
         cl.addWidget(self._field_label("Base de datos destino"))
         self.combo_db_restore.setPlaceholderText("Nombre de BD nueva o existente...")
-        self.btn_refresh_restore.setIcon(qta.icon('fa5s.sync-alt', color=APP_COLORS['TEXT_MUTED']))
+        self.btn_refresh_restore.setIcon(qta.icon('fa5s.sync-alt', color='#7D8590'))
         self.btn_refresh_restore.setFixedWidth(42)
         self.btn_refresh_restore.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         
@@ -239,7 +229,7 @@ class BackupView(QWidget):
         wl.setSpacing(12)
 
         warn_icon = QLabel()
-        warn_icon.setPixmap(qta.icon('fa5s.exclamation-triangle', color=APP_COLORS['WARNING']).pixmap(20, 20))
+        warn_icon.setPixmap(qta.icon('fa5s.exclamation-triangle', color='#D29922').pixmap(20, 20))
         warn_icon.setFixedWidth(20)
         warn_icon.setAlignment(Qt.AlignmentFlag.AlignTop)
 
@@ -248,7 +238,7 @@ class BackupView(QWidget):
             "en la base de datos destino. Esta acción no se puede deshacer."
         )
         warn_text.setFont(QFont("Segoe UI", 11))
-        warn_text.setStyleSheet(f"color: {APP_COLORS['WARNING']}; border: none;")
+        warn_text.setProperty("class", "text-warning")
         warn_text.setWordWrap(True)
 
         wl.addWidget(warn_icon); wl.addWidget(warn_text, 1)
@@ -263,15 +253,7 @@ class BackupView(QWidget):
         # — Botón —
         self.btn_restore = AnimatedButton("Ejecutar Restauración")
         self.btn_restore.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        self.btn_restore.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {APP_COLORS['WARNING']};
-                color: #FFFFFF;
-                border-radius: 6px;
-                padding: 10px 0;
-            }}
-            QPushButton:hover {{ background-color: #B07D15; }}
-        """)
+        self.btn_restore.setProperty("class", "btn-warning-hero")
         cl.addWidget(self.btn_restore)
 
         center.addWidget(card)
@@ -292,13 +274,7 @@ class BackupView(QWidget):
         
         pill = QFrame()
         pill.setFixedHeight(40)
-        pill.setStyleSheet(f"""
-            QFrame {{
-                background-color: {APP_COLORS['BG_SURFACE']};
-                border: 1px solid {APP_COLORS['BORDER']};
-                border-radius: 8px;
-            }}
-        """)
+        pill.setObjectName("modeToggleContainer")
         pill_lay = QHBoxLayout(pill)
         pill_lay.setContentsMargins(4, 4, 4, 4)
         pill_lay.setSpacing(2)
@@ -337,33 +313,12 @@ class BackupView(QWidget):
         self._style_toggle_btns()
 
     def _style_toggle_btns(self):
-        active_style = f"""
-            QPushButton {{
-                background-color: {APP_COLORS['ACCENT']};
-                color: #FFFFFF;
-                border: none;
-                border-radius: 6px;
-                padding: 0 24px;
-                font-weight: 600;
-            }}
-        """
-        inactive_style = f"""
-            QPushButton {{
-                background-color: transparent;
-                color: {APP_COLORS['TEXT_MUTED']};
-                border: none;
-                border-radius: 6px;
-                padding: 0 24px;
-                font-weight: 500;
-            }}
-            QPushButton:hover {{ color: {APP_COLORS['TEXT_LIGHT']}; }}
-        """
-        if self._active_mode == "backup":
-            self.btn_mode_backup.setStyleSheet(active_style)
-            self.btn_mode_restore.setStyleSheet(inactive_style)
-        else:
-            self.btn_mode_backup.setStyleSheet(inactive_style)
-            self.btn_mode_restore.setStyleSheet(active_style)
+        self.btn_mode_backup.setProperty("transferMode", "active" if self._active_mode == "backup" else "inactive")
+        self.btn_mode_restore.setProperty("transferMode", "active" if self._active_mode == "restore" else "inactive")
+        
+        for btn in (self.btn_mode_backup, self.btn_mode_restore):
+            btn.style().unpolish(btn)
+            btn.style().polish(btn)
 
     # ══════════════════════════════════════════════════════════════════════════
     # Panel lateral — Registro / Log
@@ -371,7 +326,6 @@ class BackupView(QWidget):
 
     def _create_log_panel(self) -> QWidget:
         page = QWidget()
-        page.setStyleSheet("background: transparent;")
         outer = QVBoxLayout(page)
         outer.setContentsMargins(12, 24, 32, 24)
         outer.setSpacing(0)
@@ -434,7 +388,7 @@ class BackupView(QWidget):
         """Separador horizontal usando token SEPARATOR."""
         d = QFrame()
         d.setFixedHeight(1)
-        d.setStyleSheet(f"background-color: {APP_COLORS['SEPARATOR']}; border: none;")
+        d.setProperty("class", "form-divider")
         return d
 
     def _field_row(self, icon_name: str, widget: QWidget) -> QHBoxLayout:
@@ -442,7 +396,7 @@ class BackupView(QWidget):
         row.setSpacing(12)
         
         icon_lbl = QLabel()
-        pm = qta.icon(icon_name, color=APP_COLORS['TEXT_MUTED']).pixmap(18, 18)
+        pm = qta.icon(icon_name, color='#7D8590').pixmap(18, 18)
         icon_lbl.setPixmap(pm)
         icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon_lbl.setFixedWidth(24)

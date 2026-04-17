@@ -17,11 +17,9 @@ from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QCursor, QColor
 
 from ui.components.help_icon import HelpIcon
-
-# ── Importar paleta desde el sistema de diseño ────────────────────────────────
 from ui.colors import DARK_THEME as APP_COLORS
 
-
+# ── Importar paleta desde el sistema de diseño ────────────────────────────────
 # ═════════════════════════════════════════════════════════════════════════════
 # MetricCard — KPI card con título, valor y subtítulo
 # ═════════════════════════════════════════════════════════════════════════════
@@ -495,4 +493,4 @@ class MonitorView(QWidget):
             self.btn_toggle.setText("▶  Iniciar monitoreo")
             self.dot_status.setStyleSheet(f"color: {APP_COLORS['TEXT_HINT']}; border: none;")
             self.status_label.setText("Detenido")
-            self.status_label.setStyleSheet(f"color: {APP_COLORS['TEXT_MUTED']};")
+            self.status_label.setStyleSheet(f"color: {'#7D8590'};")

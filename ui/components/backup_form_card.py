@@ -16,8 +16,6 @@ from PyQt6.QtGui import QFont, QCursor
 import qtawesome as qta
 
 from ui.components.animated_button import AnimatedButton
-from ui.colors import DARK_THEME as APP_COLORS
-
 
 class BackupFormCard(QFrame):
     """
@@ -36,14 +34,6 @@ class BackupFormCard(QFrame):
         self.setObjectName("formCard")
         self.setFixedWidth(600)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
-        
-        self.setStyleSheet(f"""
-            QFrame#formCard {{
-                background-color: {APP_COLORS['BG_CARD']};
-                border-radius: 12px;
-                border: 1px solid {APP_COLORS['BORDER']};
-            }}
-        """)
 
         self._build()
 
@@ -58,7 +48,7 @@ class BackupFormCard(QFrame):
         
         title = QLabel("Crear Copia de Seguridad")
         title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
-        title.setStyleSheet(f"color: {APP_COLORS['TEXT_LIGHT']}; border: none;")
+        title.setProperty("class", "text-light")
         main.addWidget(title)
         
         main.addSpacing(8)
@@ -152,15 +142,7 @@ class BackupFormCard(QFrame):
         self.btn_backup = AnimatedButton("Crear copia de seguridad")
         self.btn_backup.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         self.btn_backup.setFixedHeight(44)
-        self.btn_backup.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {APP_COLORS['ACCENT']};
-                color: #FFFFFF;
-                border-radius: 6px;
-                padding: 10px 0;
-            }}
-            QPushButton:hover {{ background-color: {APP_COLORS['ACCENT_DARK']}; }}
-        """)
+        self.btn_backup.setProperty("class", "btn-success-hero")
 
         btn_row.addWidget(self.btn_cancel)
         btn_row.addWidget(self.btn_backup, 1)
@@ -194,8 +176,7 @@ class BackupFormCard(QFrame):
     def _hdiv(self) -> QFrame:
         """Separador horizontal usando token SEPARATOR."""
         d = QFrame()
-        d.setFixedHeight(1)
-        d.setStyleSheet(f"background-color: {APP_COLORS['SEPARATOR']}; border: none;")
+        d.setProperty("class", "form-divider")
         return d
 
     def _field_row(self, icon_name: str, widget: QWidget) -> QHBoxLayout:
@@ -203,7 +184,7 @@ class BackupFormCard(QFrame):
         row.setSpacing(12)
         
         icon_lbl = QLabel()
-        pm = qta.icon(icon_name, color=APP_COLORS['TEXT_MUTED']).pixmap(18, 18)
+        pm = qta.icon(icon_name, color='#7D8590').pixmap(18, 18)
         icon_lbl.setPixmap(pm)
         icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon_lbl.setFixedWidth(24)

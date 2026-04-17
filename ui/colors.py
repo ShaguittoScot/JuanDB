@@ -36,32 +36,32 @@ DARK_THEME = {
     "INFO":         "#58A6FF",
 }
 
-# Tema claro — mismo sistema, colores invertidos
+# Tema claro — Tailwind "Slate", sin contraste extremo
 LIGHT_THEME = {
-    "BG_BASE":      "#F6F8FA",
-    "BG_SIDEBAR":   "#FFFFFF",
-    "BG_SIDEBAR2":  "#F0F2F4",
-    "BG_CONTENT":   "#F6F8FA",
-    "BG_SURFACE":   "#FFFFFF",
-    "BG_ELEVATED":  "#F0F2F4",
+    "BG_BASE":      "#F1F5F9",  # Fondo principal más neutro (Slate 100)
+    "BG_SIDEBAR":   "#F8FAFC",  # Sidebar suave (Slate 50)
+    "BG_SIDEBAR2":  "#E2E8F0",  # Hover sidebar (Slate 200)
+    "BG_CONTENT":   "#F1F5F9",
+    "BG_SURFACE":   "#FFFFFF",  # Tarjetas y paneles en blanco limpio
+    "BG_ELEVATED":  "#E2E8F0",  # Inputs y hover states
     "BG_CARD":      "#FFFFFF",
 
-    "ACCENT":       "#0969DA",
-    "ACCENT_DARK":  "#0550AE",
-    "ACCENT_ALT":   "#033D8B",
-    "ACCENT_SOFT":  "#DDF4FF",
+    "ACCENT":       "#2563EB",  # Azul moderno (Blue 600)
+    "ACCENT_DARK":  "#1D4ED8",  # Hover (Blue 700)
+    "ACCENT_ALT":   "#1E40AF",  # Pressed (Blue 800)
+    "ACCENT_SOFT":  "#DBEAFE",  # Selectores / highlight list (Blue 100)
 
-    "TEXT_LIGHT":   "#FFFFFF",
-    "TEXT_DARK":    "#1F2328",
-    "TEXT_MUTED":   "#656D76",
-    "TEXT_HINT":    "#9198A1",
+    "TEXT_LIGHT":   "#FFFFFF",  # Botones primarios
+    "TEXT_DARK":    "#334155",  # Texto principal oscuro sin negro fuerte (Slate 700)
+    "TEXT_MUTED":   "#64748B",  # Texto secundario (Slate 500)
+    "TEXT_HINT":    "#94A3B8",  # Texto deshabilitado (Slate 400)
 
-    "BORDER":       "#D0D7DE",
-    "SEPARATOR":    "#E8EAED",
-    "BORDER_FOCUS": "#0969DA",
+    "BORDER":       "#E2E8F0",  # Bordes sutiles (Slate 200)
+    "SEPARATOR":    "#CBD5E1",  # Separadores (Slate 300)
+    "BORDER_FOCUS": "#3B82F6",
 
-    "ERROR":        "#D1242F",
-    "SUCCESS":      "#1A7F37",
-    "WARNING":      "#9A6700",
-    "INFO":         "#0969DA",
+    "ERROR":        "#EF4444",
+    "SUCCESS":      "#10B981",
+    "WARNING":      "#F59E0B",
+    "INFO":         "#3B82F6",
 }

@@ -9,7 +9,6 @@ import qtawesome as qta
 from ui.components.animated_button import AnimatedButton
 from ui.components.file_selector import FileSelector
 from ui.components.log_text_edit import LogTextEdit
-from ui.colors import DARK_THEME as APP_COLORS
 from ui.components.help_icon import HelpIcon
 
 
@@ -52,13 +51,6 @@ class TransferView(QWidget):
         self.stack = QStackedWidget()
         self.stack.setMaximumWidth(600)
         self.stack.setObjectName("transferCard")
-        self.stack.setStyleSheet(f"""
-            QStackedWidget#transferCard {{
-                background-color: {APP_COLORS['BG_CARD']};
-                border-radius: 12px;
-                border: 1px solid {APP_COLORS['BORDER']};
-            }}
-        """)
         
         self.stack.addWidget(self._form_export())
         self.stack.addWidget(self._form_import())
@@ -79,7 +71,6 @@ class TransferView(QWidget):
 
     def _create_log_panel(self) -> QWidget:
         page = QWidget()
-        page.setStyleSheet("background: transparent;")
         outer = QVBoxLayout(page)
         outer.setContentsMargins(12, 24, 32, 24)
         outer.setSpacing(0)
@@ -134,13 +125,7 @@ class TransferView(QWidget):
         
         pill = QFrame()
         pill.setFixedHeight(40)
-        pill.setStyleSheet(f"""
-            QFrame {{
-                background-color: {APP_COLORS['BG_SURFACE']};
-                border: 1px solid {APP_COLORS['BORDER']};
-                border-radius: 8px;
-            }}
-        """)
+        pill.setObjectName("modeToggleContainer")
         pill_lay = QHBoxLayout(pill)
         pill_lay.setContentsMargins(4, 4, 4, 4)
         pill_lay.setSpacing(2)
@@ -168,33 +153,12 @@ class TransferView(QWidget):
         return container
 
     def _style_toggle_btns(self):
-        active_style = f"""
-            QPushButton {{
-                background-color: {APP_COLORS['ACCENT']};
-                color: #FFFFFF;
-                border: none;
-                border-radius: 6px;
-                padding: 0 24px;
-                font-weight: 600;
-            }}
-        """
-        inactive_style = f"""
-            QPushButton {{
-                background-color: transparent;
-                color: {APP_COLORS['TEXT_MUTED']};
-                border: none;
-                border-radius: 6px;
-                padding: 0 24px;
-                font-weight: 500;
-            }}
-            QPushButton:hover {{ color: {APP_COLORS['TEXT_LIGHT']}; }}
-        """
-        if self._active_mode == "export":
-            self.btn_mode_export.setStyleSheet(active_style)
-            self.btn_mode_import.setStyleSheet(inactive_style)
-        else:
-            self.btn_mode_export.setStyleSheet(inactive_style)
-            self.btn_mode_import.setStyleSheet(active_style)
+        self.btn_mode_export.setProperty("transferMode", "active" if self._active_mode == "export" else "inactive")
+        self.btn_mode_import.setProperty("transferMode", "active" if self._active_mode == "import" else "inactive")
+        self.btn_mode_export.style().unpolish(self.btn_mode_export)
+        self.btn_mode_export.style().polish(self.btn_mode_export)
+        self.btn_mode_import.style().unpolish(self.btn_mode_import)
+        self.btn_mode_import.style().polish(self.btn_mode_import)
 
     def _switch_mode(self, mode: str):
         self._active_mode = mode
@@ -208,7 +172,7 @@ class TransferView(QWidget):
         row.setSpacing(12)
         
         icon_lbl = QLabel()
-        pm = qta.icon(icon_name, color=APP_COLORS['TEXT_MUTED']).pixmap(18, 18)
+        pm = qta.icon(icon_name, color='#7D8590').pixmap(18, 18)
         icon_lbl.setPixmap(pm)
         icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon_lbl.setFixedWidth(24)
@@ -220,19 +184,18 @@ class TransferView(QWidget):
     def _lbl(self, text: str) -> QLabel:
         l = QLabel(text)
         l.setFont(QFont("Segoe UI", 10, QFont.Weight.Medium))
-        l.setStyleSheet(f"color: {APP_COLORS['TEXT_MUTED']};")
+        l.setProperty("class", "form-label")
         return l
 
     def _form_export(self) -> QWidget:
         page = QWidget()
-        page.setStyleSheet("background: transparent;")
         cl = QVBoxLayout(page)
         cl.setContentsMargins(32, 32, 32, 32)
         cl.setSpacing(18)
 
         title = QLabel("Exportar Datos")
         title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
-        title.setStyleSheet(f"color: {APP_COLORS['TEXT_LIGHT']};")
+        title.setProperty("class", "view-title")
         cl.addWidget(title)
         
         cl.addSpacing(8)
@@ -260,29 +223,20 @@ class TransferView(QWidget):
 
         self.btn_export = AnimatedButton("Ejecutar Exportación")
         self.btn_export.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        self.btn_export.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {APP_COLORS['ACCENT']};
-                color: #FFFFFF;
-                border-radius: 6px;
-                padding: 10px 0;
-            }}
-            QPushButton:hover {{ background-color: {APP_COLORS['ACCENT_DARK']}; }}
-        """)
+        self.btn_export.setProperty("class", "btn-primary-hero")
         cl.addWidget(self.btn_export)
 
         return page
 
     def _form_import(self) -> QWidget:
         page = QWidget()
-        page.setStyleSheet("background: transparent;")
         cl = QVBoxLayout(page)
         cl.setContentsMargins(32, 32, 32, 32)
         cl.setSpacing(18)
 
         title = QLabel("Importar Datos")
         title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
-        title.setStyleSheet(f"color: {APP_COLORS['TEXT_LIGHT']};")
+        title.setProperty("class", "view-title")
         cl.addWidget(title)
         
         cl.addSpacing(8)
@@ -310,15 +264,7 @@ class TransferView(QWidget):
 
         self.btn_import = AnimatedButton("Ejecutar Importación")
         self.btn_import.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        self.btn_import.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {APP_COLORS['WARNING']};
-                color: #FFFFFF;
-                border-radius: 6px;
-                padding: 10px 0;
-            }}
-            QPushButton:hover {{ background-color: #B07D15; }}
-        """)
+        self.btn_import.setProperty("class", "btn-info-hero")
         cl.addWidget(self.btn_import)
 
         return page

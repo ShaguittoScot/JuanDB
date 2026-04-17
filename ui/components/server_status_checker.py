@@ -14,7 +14,6 @@ from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt6.QtGui import QFont, QCursor
 
-from ui.colors import DARK_THEME as APP_COLORS
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -94,10 +93,10 @@ class ServerStatusChecker(QFrame):
     status_changed = pyqtSignal(bool, str)
 
     _STATES = {
-        "idle":    ("○", APP_COLORS["TEXT_HINT"],    "—"),
-        "checking":("◌", APP_COLORS["INFO"],         "Verificando..."),
-        "ok":      ("●", APP_COLORS["SUCCESS"],      ""),
-        "error":   ("●", APP_COLORS["ERROR"],        ""),
+        "idle":    ("○", "text-hint",    "—"),
+        "checking":("◌", "text-info",    "Verificando..."),
+        "ok":      ("●", "text-success", ""),
+        "error":   ("●", "text-error",   ""),
     }
 
     def __init__(self, get_credentials_fn=None, parent=None):
@@ -126,12 +125,12 @@ class ServerStatusChecker(QFrame):
         # Indicador de estado: dot + texto
         self._dot = QLabel("○")
         self._dot.setFont(QFont("Segoe UI", 12))
-        self._dot.setStyleSheet(f"color: {APP_COLORS['TEXT_HINT']}; border: none;")
+        self._dot.setProperty("class", "text-hint")
         self._dot.setFixedWidth(16)
 
         self._status_lbl = QLabel("—")
         self._status_lbl.setFont(QFont("Segoe UI", 11))
-        self._status_lbl.setStyleSheet(f"color: {APP_COLORS['TEXT_HINT']}; border: none;")
+        self._status_lbl.setProperty("class", "text-hint")
         self._status_lbl.setMinimumWidth(200)
 
         lay.addWidget(self.btn_check)
@@ -186,15 +185,20 @@ class ServerStatusChecker(QFrame):
 
     def _set_state(self, state: str, detail: str = ""):
         self._state = state
-        dot_char, color, default_msg = self._STATES[state]
+        dot_char, css_class, default_msg = self._STATES[state]
         msg = detail if detail else default_msg
 
         if state != "checking":
             self._dot.setText(dot_char)
 
-        self._dot.setStyleSheet(f"color: {color}; border: none;")
+        self._dot.setProperty("class", css_class)
+        self._dot.style().unpolish(self._dot)
+        self._dot.style().polish(self._dot)
+
         self._status_lbl.setText(msg)
-        self._status_lbl.setStyleSheet(f"color: {color}; border: none; font-size: 11px;")
+        self._status_lbl.setProperty("class", css_class)
+        self._status_lbl.style().unpolish(self._status_lbl)
+        self._status_lbl.style().polish(self._status_lbl)
 
     # ── API pública ───────────────────────────────────────────────────────────
 

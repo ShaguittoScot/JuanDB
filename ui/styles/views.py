@@ -1,7 +1,7 @@
 def get_views_style(theme: dict) -> str:
     return f"""
         /* ── GLOBALES DE VISTAS ─────────────────────────────────────── */
-        BackupView, ImportExportView, SecurityView, MonitorView {{
+        BackupView, TransferView, SecurityView, MonitorView, SettingsView, SetupView {{
             background-color: transparent;
         }}
 
@@ -37,11 +37,14 @@ def get_views_style(theme: dict) -> str:
             border-right: 4px solid transparent;
             border-top: 5px solid {theme['TEXT_MUTED']};
             margin-right: 10px;
+            width: 0px;
+            height: 0px;
         }}
-        QComboBox QAbstractItemView, QComboBox QListView {{
+        QComboBox QAbstractItemView {{
             background: {theme['BG_ELEVATED']};
             background-color: {theme['BG_ELEVATED']};
             border: 1px solid {theme['BORDER']};
+            border-radius: 4px;
             selection-background-color: {theme['ACCENT_SOFT']};
             selection-color: {theme['ACCENT']};
             color: {theme['TEXT_DARK']};
@@ -49,9 +52,83 @@ def get_views_style(theme: dict) -> str:
             padding: 4px;
         }}
         QComboBox QAbstractItemView::item {{
+            background-color: {theme['BG_ELEVATED']};
             padding: 6px 10px;
             border-radius: 4px;
+            min-height: 18px;
         }}
+        QComboBox QAbstractItemView::item:hover,
+        QComboBox QAbstractItemView::item:selected {{
+            background-color: {theme['ACCENT_SOFT']};
+            color: {theme['ACCENT']};
+        }}
+
+        /* ── QSpinBox ────────────────────────────────────────────────── */
+        QSpinBox {{
+            background-color: {theme['BG_ELEVATED']};
+            border: 1px solid {theme['BORDER']};
+            border-radius: 6px;
+            padding: 0 10px;
+            color: {theme['TEXT_DARK']};
+            font-size: 13px;
+            min-height: 18px;
+        }}
+        QSpinBox:focus {{ border-color: {theme['ACCENT']}; }}
+        QSpinBox::up-button, QSpinBox::down-button {{
+            width: 20px;
+            background: {theme['BG_ELEVATED']};
+            border: none;
+            border-radius: 3px;
+        }}
+        QSpinBox::up-button:hover, QSpinBox::down-button:hover {{
+            background: {theme['BG_SURFACE']};
+        }}
+
+        /* ── QSlider ─────────────────────────────────────────────────── */
+        QSlider::groove:horizontal {{
+            height: 4px;
+            background: {theme['BORDER']};
+            border-radius: 2px;
+        }}
+        QSlider::handle:horizontal {{
+            background: {theme['ACCENT']};
+            border: none;
+            width: 14px; height: 14px;
+            margin: -5px 0;
+            border-radius: 7px;
+        }}
+        QSlider::sub-page:horizontal {{
+            background: {theme['ACCENT']};
+            border-radius: 2px;
+        }}
+
+        /* ── QListWidget ─────────────────────────────────────────────── */
+        QListWidget {{
+            background-color: {theme['BG_SURFACE']};
+            border: 1px solid {theme['BORDER']};
+            border-radius: 10px;
+            padding: 8px;
+            outline: none;
+        }}
+        QListWidget::item {{
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: {theme['TEXT_MUTED']};
+            font-size: 13px;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 500;
+            border: none;
+        }}
+        QListWidget::item:selected {{
+            background-color: {theme['ACCENT_SOFT']};
+            color: {theme['ACCENT']};
+            font-weight: 600;
+        }}
+        QListWidget::item:hover:!selected {{
+            background-color: {theme['BG_ELEVATED']};
+            color: {theme['TEXT_DARK']};
+        }}
+
 
         /* ── GROUPBOX ────────────────────────────────────────────────── */
         QGroupBox {{
@@ -204,6 +281,7 @@ def get_views_style(theme: dict) -> str:
         .text-hint     {{ color: {theme['TEXT_HINT']}; font-size: 11px; }}
         .text-error    {{ color: {theme['ERROR']}; }}
         .text-success  {{ color: {theme['SUCCESS']}; }}
+        .text-info     {{ color: {theme['INFO']}; }}
         .text-warning  {{ color: {theme['WARNING']}; }}
         .text-muted-11 {{ color: {theme['TEXT_MUTED']}; font-size: 11px; }}
         .text-footer   {{ color: {theme['TEXT_HINT']}; font-size: 11px; padding: 6px; }}
@@ -372,7 +450,7 @@ def get_views_style(theme: dict) -> str:
         QFrame#formCard {{
             background-color: {theme['BG_CARD']};
             border: 1px solid {theme['BORDER']};
-            border-radius: 10px;
+            border-radius: 12px;
         }}
         QFrame#terminalCard {{
             background-color: {theme['BG_BASE']};
@@ -385,6 +463,18 @@ def get_views_style(theme: dict) -> str:
             border-bottom: 1px solid {theme['BORDER']};
             border-top-left-radius: 10px;
             border-top-right-radius: 10px;
+        }}
+        
+        QStackedWidget#transferCard {{
+            background-color: {theme['BG_CARD']};
+            border-radius: 12px;
+            border: 1px solid {theme['BORDER']};
+        }}
+
+        QFrame#modeToggleContainer {{
+            background-color: {theme['BG_SURFACE']};
+            border: 1px solid {theme['BORDER']};
+            border-radius: 8px;
         }}
 
         /* ── INPUT GROUP (input + botón fusionado) ────────────────────── */
@@ -447,6 +537,79 @@ def get_views_style(theme: dict) -> str:
         .btn-primary-hero:disabled {{
             background-color: {theme['BORDER']};
             color: {theme['TEXT_HINT']};
+        }}
+
+        .btn-warning-hero {{
+            background-color: {theme['WARNING']};
+            border: none;
+            border-radius: 8px;
+            color: #FFFFFF;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 12px 28px;
+            min-height: 22px;
+        }}
+        .btn-warning-hero:hover {{
+            background-color: #B07D15;
+        }}
+        .btn-warning-hero:pressed {{
+            background-color: #8C6411;
+        }}
+        
+        .btn-success-hero {{
+            background-color: {theme['SUCCESS']};
+            border: none;
+            border-radius: 8px;
+            color: #FFFFFF;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 12px 28px;
+            min-height: 22px;
+        }}
+        .btn-success-hero:hover {{
+            background-color: #329940;
+        }}
+        .btn-success-hero:pressed {{
+            background-color: #298235;
+        }}
+
+        .btn-info-hero {{
+            background-color: {theme['INFO']};
+            border: none;
+            border-radius: 8px;
+            color: #FFFFFF;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 12px 28px;
+            min-height: 22px;
+        }}
+        .btn-info-hero:hover {{
+            background-color: #4A8EE0;
+        }}
+        .btn-info-hero:pressed {{
+            background-color: #3C75BA;
+        }}
+
+
+        /* ── BOTONES DE MODO DE TRANSFERENCIA ───────────────────────── */
+        QPushButton[transferMode="active"] {{
+            background-color: {theme['ACCENT']};
+            color: #FFFFFF;
+            border: none;
+            border-radius: 6px;
+            padding: 0 24px;
+            font-weight: 600;
+        }}
+        QPushButton[transferMode="inactive"] {{
+            background-color: transparent;
+            color: {theme['TEXT_MUTED']};
+            border: none;
+            border-radius: 6px;
+            padding: 0 24px;
+            font-weight: 500;
+        }}
+        QPushButton[transferMode="inactive"]:hover {{
+            color: {theme['TEXT_LIGHT']};
         }}
 
         /* ── FORM LABEL (labels modernos, más pequeños) ───────────────── */

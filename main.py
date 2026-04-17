@@ -33,6 +33,8 @@ def main():
         sys.exit(app.exec())
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print("ERROR:", e)
         input("Presiona Enter para salir...")
 

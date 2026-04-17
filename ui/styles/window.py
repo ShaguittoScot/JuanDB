@@ -1,8 +1,10 @@
 def get_window_style(theme: dict) -> str:
     return f"""
         /* ── GLOBAL RESET ─────────────────────────────────────────────── */
-        QWidget {{
+        MainWindow, SetupView {{
             background-color: {theme['BG_BASE']};
+        }}
+        QWidget {{
             color: {theme['TEXT_DARK']};
             font-family: 'Segoe UI', 'Inter', 'SF Pro Text', sans-serif;
             font-size: 13px;

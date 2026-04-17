@@ -16,8 +16,6 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QPoint, pyqtSignal
 from PyQt6.QtGui import QFont, QCursor, QColor, QAction
 
-from ui.colors import DARK_THEME as APP_COLORS
-
 
 class UserProfileWidget(QFrame):
     """
@@ -36,52 +34,6 @@ class UserProfileWidget(QFrame):
     settings_clicked = pyqtSignal()
     logout_clicked   = pyqtSignal()
 
-    # ─── Estilos QSS ────────────────────────────────────────────────────────
-
-    _MENU_QSS = f"""
-        QMenu {{
-            background-color: {APP_COLORS['BG_SURFACE']};
-            border: 1px solid {APP_COLORS['BORDER']};
-            border-radius: 10px;
-            padding: 6px;
-            color: {APP_COLORS['TEXT_DARK']};
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 13px;
-        }}
-        QMenu::item {{
-            padding: 9px 16px;
-            border-radius: 6px;
-        }}
-        QMenu::item:selected {{
-            background-color: {APP_COLORS['BG_ELEVATED']};
-        }}
-        QMenu::separator {{
-            height: 1px;
-            background: {APP_COLORS['SEPARATOR']};
-            margin: 4px 10px;
-        }}
-    """
-
-    _WIDGET_HOVER_QSS = f"""
-        QFrame#userProfileWidget {{
-            border-radius: 8px;
-            border: 1px solid transparent;
-        }}
-        QFrame#userProfileWidget:hover {{
-            background-color: {APP_COLORS['BG_ELEVATED']};
-            border-color: {APP_COLORS['BORDER']};
-        }}
-    """
-
-    _AVATAR_QSS = f"""
-        QLabel {{
-            background-color: {APP_COLORS['ACCENT_SOFT']};
-            color: {APP_COLORS['ACCENT']};
-            border-radius: 14px;
-            font-weight: 700;
-        }}
-    """
-
     # ─────────────────────────────────────────────────────────────────────────
 
     def __init__(self, name: str = "Usuario", role: str = "Rol",
@@ -89,7 +41,6 @@ class UserProfileWidget(QFrame):
         super().__init__(parent)
         self.setObjectName("userProfileWidget")
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.setStyleSheet(self._WIDGET_HOVER_QSS)
         self.setFixedHeight(52)
 
         self._name    = name
@@ -110,7 +61,7 @@ class UserProfileWidget(QFrame):
         self._avatar.setFixedSize(28, 28)
         self._avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._avatar.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
-        self._avatar.setStyleSheet(self._AVATAR_QSS)
+        self._avatar.setObjectName("userAvatar")
 
         # ── Columna de texto ─────────────────────────────────────────────────
         col = QVBoxLayout()
@@ -119,13 +70,13 @@ class UserProfileWidget(QFrame):
 
         self._name_lbl = QLabel(self._name)
         self._name_lbl.setFont(QFont("Segoe UI", 12, QFont.Weight.DemiBold))
-        self._name_lbl.setStyleSheet(f"color: {APP_COLORS['TEXT_DARK']}; border: none;")
+        self._name_lbl.setProperty("class", "text-light")
         self._name_lbl.setMaximumWidth(130)
 
         role_text = f"{self._role}  ·  @{self._db_user}" if self._db_user else self._role
         self._role_lbl = QLabel(role_text)
         self._role_lbl.setFont(QFont("Segoe UI", 10))
-        self._role_lbl.setStyleSheet(f"color: {APP_COLORS['TEXT_HINT']}; border: none;")
+        self._role_lbl.setProperty("class", "text-hint")
         self._role_lbl.setMaximumWidth(130)
 
         col.addWidget(self._name_lbl)
@@ -134,7 +85,7 @@ class UserProfileWidget(QFrame):
         # ── Chevron ──────────────────────────────────────────────────────────
         chevron = QLabel("⋯")
         chevron.setFont(QFont("Segoe UI", 14))
-        chevron.setStyleSheet(f"color: {APP_COLORS['TEXT_HINT']}; border: none;")
+        chevron.setProperty("class", "text-hint")
         chevron.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         lay.addWidget(self._avatar)
@@ -145,7 +96,7 @@ class UserProfileWidget(QFrame):
 
     def _build_menu(self) -> QMenu:
         menu = QMenu(self)
-        menu.setStyleSheet(self._MENU_QSS)
+        menu.setObjectName("userMenu")
 
         # ── Encabezado informativo (no clickeable) ────────────────────────
         header_widget = QWidget()
@@ -155,11 +106,11 @@ class UserProfileWidget(QFrame):
 
         lbl_name = QLabel(self._name)
         lbl_name.setFont(QFont("Segoe UI", 13, QFont.Weight.DemiBold))
-        lbl_name.setStyleSheet(f"color: {APP_COLORS['TEXT_DARK']};")
+        lbl_name.setProperty("class", "text-light")
 
         lbl_role = QLabel(f"@{self._db_user}  ·  {self._role}" if self._db_user else self._role)
         lbl_role.setFont(QFont("Segoe UI", 11))
-        lbl_role.setStyleSheet(f"color: {APP_COLORS['TEXT_HINT']};")
+        lbl_role.setProperty("class", "text-hint")
 
         header_lay.addWidget(lbl_name)
         header_lay.addWidget(lbl_role)
@@ -188,16 +139,7 @@ class UserProfileWidget(QFrame):
         # Estilo en rojo solo para este ítem
         logout_widget = QLabel("  ⎋  Cerrar sesión")
         logout_widget.setFont(QFont("Segoe UI", 13))
-        logout_widget.setStyleSheet(f"""
-            QLabel {{
-                color: {APP_COLORS['ERROR']};
-                padding: 9px 16px;
-                border-radius: 6px;
-            }}
-            QLabel:hover {{
-                background-color: rgba(248, 81, 73, 0.10);
-            }}
-        """)
+        logout_widget.setObjectName("userLogoutItem")
         logout_widget.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         logout_widget.mousePressEvent = lambda _: (menu.close(), self.logout_clicked.emit())
 

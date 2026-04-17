@@ -18,7 +18,6 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtGui import QFont, QCursor
 
-from ui.colors import DARK_THEME as APP_COLORS
 from ui.components.server_status_checker import ServerStatusChecker
 from ui.components.help_icon import HelpIcon
 
@@ -33,35 +32,21 @@ def _section(title: str) -> QFrame:
     Equivale al BG_CARD del sistema de diseño.
     """
     frame = QFrame()
-    frame.setStyleSheet(f"""
-        QFrame {{
-            background-color: {APP_COLORS['BG_SURFACE']};
-            border: 1px solid {APP_COLORS['BORDER']};
-            border-radius: 8px;
-        }}
-    """)
+    frame.setProperty("class", "section-card")
     outer = QVBoxLayout(frame)
     outer.setContentsMargins(0, 0, 0, 0)
     outer.setSpacing(0)
 
     # Encabezado de sección
     hdr = QFrame()
-    hdr.setStyleSheet(f"""
-        QFrame {{
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid {APP_COLORS['SEPARATOR']};
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-        }}
-    """)
+    hdr.setProperty("class", "section-header")
     hdr.setFixedHeight(40)
     hl = QHBoxLayout(hdr)
     hl.setContentsMargins(16, 0, 16, 0)
 
     t = QLabel(title)
     t.setFont(QFont("Segoe UI", 11, QFont.Weight.DemiBold))
-    t.setStyleSheet(f"color: {APP_COLORS['TEXT_DARK']}; border: none;")
+    t.setProperty("class", "text-adaptive")
     hl.addWidget(t)
 
     # Área de contenido
@@ -83,7 +68,7 @@ def _section(title: str) -> QFrame:
 def _field_label(text: str) -> QLabel:
     lbl = QLabel(text)
     lbl.setFont(QFont("Segoe UI", 11, QFont.Weight.Medium))
-    lbl.setStyleSheet(f"color: {APP_COLORS['TEXT_MUTED']}; border: none;")
+    lbl.setStyleSheet(f"color: {'#7D8590'}; border: none;")
     return lbl
 
 
@@ -96,7 +81,7 @@ def _input() -> QLineEdit:
 def _hint(text: str) -> QLabel:
     lbl = QLabel(text)
     lbl.setFont(QFont("Segoe UI", 10))
-    lbl.setStyleSheet(f"color: {APP_COLORS['TEXT_HINT']}; border: none;")
+    lbl.setProperty("class", "text-hint")
     lbl.setWordWrap(True)
     return lbl
 
@@ -104,7 +89,7 @@ def _hint(text: str) -> QLabel:
 def _hdiv() -> QFrame:
     d = QFrame()
     d.setFixedHeight(1)
-    d.setStyleSheet(f"background: {APP_COLORS['SEPARATOR']}; border: none;")
+    d.setProperty("class", "h-separator")
     return d
 
 
@@ -151,7 +136,7 @@ class _GeneralPage(QWidget):
         self.chk_check_update = QCheckBox("Buscar actualizaciones al iniciar")
         for chk in (self.chk_minimized, self.chk_autoconnect, self.chk_check_update):
             chk.setFont(QFont("Segoe UI", 12))
-            chk.setStyleSheet(f"color: {APP_COLORS['TEXT_DARK']}; border: none;")
+            chk.setProperty("class", "text-adaptive")
             st.addWidget(chk)
         self.chk_autoconnect.setChecked(True)
 
@@ -228,27 +213,10 @@ class _InterfacePage(QWidget):
         self.sld_font.setRange(9, 18)
         self.sld_font.setValue(12)
         self.sld_font.setFixedHeight(20)
-        self.sld_font.setStyleSheet(f"""
-            QSlider::groove:horizontal {{
-                height: 4px;
-                background: {APP_COLORS['BORDER']};
-                border-radius: 2px;
-            }}
-            QSlider::handle:horizontal {{
-                background: {APP_COLORS['ACCENT']};
-                border: none;
-                width: 14px; height: 14px;
-                margin: -5px 0;
-                border-radius: 7px;
-            }}
-            QSlider::sub-page:horizontal {{
-                background: {APP_COLORS['ACCENT']};
-                border-radius: 2px;
-            }}
-        """)
+
         self.lbl_font_size = QLabel("12 px")
         self.lbl_font_size.setFont(QFont("Segoe UI", 11, QFont.Weight.DemiBold))
-        self.lbl_font_size.setStyleSheet(f"color: {APP_COLORS['ACCENT']}; border: none;")
+        self.lbl_font_size.setProperty("class", "text-accent")
         self.lbl_font_size.setFixedWidth(44)
         self.sld_font.valueChanged.connect(
             lambda v: self.lbl_font_size.setText(f"{v} px")
@@ -263,7 +231,7 @@ class _InterfacePage(QWidget):
         self.chk_timestamps = QCheckBox("Mostrar marca de tiempo en el registro")
         self.chk_timestamps.setFont(QFont("Segoe UI", 12))
         self.chk_timestamps.setChecked(True)
-        self.chk_timestamps.setStyleSheet(f"color: {APP_COLORS['TEXT_DARK']}; border: none;")
+        self.chk_timestamps.setProperty("class", "text-adaptive")
         cn.addWidget(self.chk_timestamps)
 
         root.addWidget(sec_con)
@@ -310,26 +278,7 @@ class _DatabasePage(QWidget):
         self.spin_timeout.setFixedHeight(36)
         self.spin_timeout.setFixedWidth(100)
         self.spin_timeout.setSuffix("  seg")
-        self.spin_timeout.setStyleSheet(f"""
-            QSpinBox {{
-                background-color: {APP_COLORS['BG_ELEVATED']};
-                border: 1px solid {APP_COLORS['BORDER']};
-                border-radius: 6px;
-                padding: 0 10px;
-                color: {APP_COLORS['TEXT_DARK']};
-                font-size: 13px;
-            }}
-            QSpinBox:focus {{ border-color: {APP_COLORS['ACCENT']}; }}
-            QSpinBox::up-button, QSpinBox::down-button {{
-                width: 20px;
-                background: {APP_COLORS['BG_ELEVATED']};
-                border: none;
-                border-radius: 3px;
-            }}
-            QSpinBox::up-button:hover, QSpinBox::down-button:hover {{
-                background: {APP_COLORS['BG_SURFACE']};
-            }}
-        """)
+
         to_row.addWidget(self.spin_timeout); to_row.addStretch()
         co.addLayout(to_row)
         co.addWidget(_hint("Tiempo máximo de espera antes de cancelar una operación de conexión."))
@@ -344,7 +293,6 @@ class _DatabasePage(QWidget):
         self.spin_retries.setFixedHeight(36)
         self.spin_retries.setFixedWidth(100)
         self.spin_retries.setSuffix("  intentos")
-        self.spin_retries.setStyleSheet(self.spin_timeout.styleSheet())
         rt_row.addWidget(self.spin_retries); rt_row.addStretch()
         co.addLayout(rt_row)
 
@@ -357,7 +305,7 @@ class _DatabasePage(QWidget):
         self.chk_autosave_logs = QCheckBox("Auto-guardar logs de errores automáticamente")
         self.chk_autosave_logs.setFont(QFont("Segoe UI", 12))
         self.chk_autosave_logs.setChecked(True)
-        self.chk_autosave_logs.setStyleSheet(f"color: {APP_COLORS['TEXT_DARK']}; border: none;")
+        self.chk_autosave_logs.setProperty("class", "text-adaptive")
         lo.addWidget(self.chk_autosave_logs)
         lo.addWidget(_hint("Los errores se guardarán en logs/errors.log dentro de la carpeta de la aplicación."))
 
@@ -371,7 +319,6 @@ class _DatabasePage(QWidget):
         self.spin_log_days.setFixedHeight(36)
         self.spin_log_days.setFixedWidth(100)
         self.spin_log_days.setSuffix("  días")
-        self.spin_log_days.setStyleSheet(self.spin_timeout.styleSheet())
         ret_row.addWidget(self.spin_log_days); ret_row.addStretch()
         lo.addLayout(ret_row)
         lo.addWidget(_hint("Los registros más antiguos serán eliminados automáticamente."))
@@ -462,33 +409,7 @@ class SettingsView(QWidget):
         self.cat_list.setFixedWidth(180)
         self.cat_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.cat_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.cat_list.setStyleSheet(f"""
-            QListWidget {{
-                background-color: {APP_COLORS['BG_SURFACE']};
-                border: 1px solid {APP_COLORS['BORDER']};
-                border-radius: 10px;
-                padding: 8px;
-                outline: none;
-            }}
-            QListWidget::item {{
-                border-radius: 6px;
-                padding: 10px 12px;
-                color: {APP_COLORS['TEXT_MUTED']};
-                font-size: 13px;
-                font-family: 'Segoe UI', sans-serif;
-                font-weight: 500;
-                border: none;
-            }}
-            QListWidget::item:selected {{
-                background-color: {APP_COLORS['ACCENT_SOFT']};
-                color: {APP_COLORS['ACCENT']};
-                font-weight: 600;
-            }}
-            QListWidget::item:hover:!selected {{
-                background-color: {APP_COLORS['BG_ELEVATED']};
-                color: {APP_COLORS['TEXT_DARK']};
-            }}
-        """)
+
         for icon, label in self._CATEGORIES:
             item = QListWidgetItem(f"  {icon}   {label}")
             item.setFont(QFont("Segoe UI", 12))
@@ -517,7 +438,7 @@ class SettingsView(QWidget):
     def _action_bar(self) -> QFrame:
         bar = QFrame()
         bar.setFixedHeight(64)
-        bar.setStyleSheet(f"border-top: 1px solid {APP_COLORS['SEPARATOR']}; background: transparent;")
+        bar.setObjectName("pageHeader")
         lay = QHBoxLayout(bar)
         lay.setContentsMargins(24, 0, 24, 0)
         lay.setSpacing(10)
@@ -525,7 +446,7 @@ class SettingsView(QWidget):
         # Feedback de guardado
         self._lbl_saved = QLabel("")
         self._lbl_saved.setFont(QFont("Segoe UI", 12))
-        self._lbl_saved.setStyleSheet(f"color: {APP_COLORS['SUCCESS']}; border: none;")
+        self._lbl_saved.setProperty("class", "text-SUCCESS".lower())
 
         # Botón restablecer
         btn_reset = QPushButton("Restablecer valores")
@@ -563,11 +484,11 @@ class SettingsView(QWidget):
         self.page_general.set_values({})
         self.page_interface.set_values({})
         self.page_database.set_values({})
-        self._lbl_saved.setStyleSheet(f"color: {APP_COLORS['INFO']}; border: none;")
+        self._lbl_saved.setProperty("class", "text-INFO".lower())
         self._lbl_saved.setText("↺  Valores restablecidos")
         QTimer.singleShot(3000, lambda: (
             self._lbl_saved.setText(""),
-            self._lbl_saved.setStyleSheet(f"color: {APP_COLORS['SUCCESS']}; border: none;")
+            self._lbl_saved.setProperty("class", "text-SUCCESS".lower())
         ))
 
     # ── API pública ───────────────────────────────────────────────────────────
