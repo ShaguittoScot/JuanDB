@@ -3,8 +3,9 @@ from PyQt6.QtWidgets import (
     QTableWidget, QTableWidgetItem, QHeaderView, QLineEdit,
     QPushButton, QAbstractItemView, QMessageBox, QCheckBox, QComboBox
 )
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer, QSize
 from PyQt6.QtGui import QFont, QCursor
+import qtawesome as qta
 
 from ui.components.help_icon import HelpIcon
 
@@ -128,20 +129,20 @@ class SecurityView(QWidget):
         tl.setContentsMargins(12, 0, 12, 0)
         tl.setSpacing(6)
 
-        self.btn_refresh = QPushButton("↺  Actualizar")
-        self.btn_refresh.setProperty("class", "btn-secondary-animated")
-        self.btn_refresh.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.btn_refresh.setFont(QFont("Segoe UI", 11, QFont.Weight.Medium))
-        self.btn_refresh.setFixedHeight(32)
+        self.btn_refresh = QPushButton("  Actualizar")
+        self.btn_refresh.setIcon(qta.icon('fa5s.sync-alt', color='#7D8590'))
+        self.btn_refresh.setIconSize(QSize(14, 14))
 
-        self.btn_edit = QPushButton("✎  Editar")
+        self.btn_edit = QPushButton("  Editar")
+        self.btn_edit.setIcon(qta.icon('fa5s.edit', color='#7D8590'))
         self.btn_edit.setProperty("class", "btn-secondary-animated")
         self.btn_edit.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btn_edit.setFont(QFont("Segoe UI", 11, QFont.Weight.Medium))
         self.btn_edit.setFixedHeight(32)
         self.btn_edit.setEnabled(False)
 
-        self.btn_delete = QPushButton("🗑  Eliminar")
+        self.btn_delete = QPushButton("  Eliminar")
+        self.btn_delete.setIcon(qta.icon('fa5s.trash-alt', color='#F85149'))
         self.btn_delete.setProperty("class", "btn-danger")
         self.btn_delete.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btn_delete.setFont(QFont("Segoe UI", 11, QFont.Weight.Medium))
@@ -228,7 +229,8 @@ class SecurityView(QWidget):
         self.txt_pass.setEchoMode(QLineEdit.EchoMode.Password)
         self.txt_pass.setFixedHeight(38)
 
-        self.btn_show_pass = QPushButton("👁")
+        self.btn_show_pass = QPushButton()
+        self.btn_show_pass.setIcon(qta.icon('fa5s.eye', color='#7D8590'))
         self.btn_show_pass.setFixedSize(38, 38)
         self.btn_show_pass.setCheckable(True)
         self.btn_show_pass.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
@@ -277,11 +279,22 @@ class SecurityView(QWidget):
         fl.addWidget(self.btn_create)
 
         # Nota
-        note = QLabel("ℹ  Las cuentas nuevas tienen privilegios básicos. Usa 'Editar' para ampliarlos.")
+        note_frame = QFrame()
+        nl = QHBoxLayout(note_frame)
+        nl.setContentsMargins(0, 0, 0, 0)
+        nl.setSpacing(8)
+        
+        note_icon = QLabel()
+        note_icon.setPixmap(qta.icon('fa5s.info-circle', color='#7D8590').pixmap(14, 14))
+        
+        note = QLabel("Las cuentas nuevas tienen privilegios básicos. Usa 'Editar' para ampliarlos.")
         note.setFont(QFont("Segoe UI", 11))
         note.setProperty("class", "text-hint")
         note.setWordWrap(True)
-        fl.addWidget(note)
+        
+        nl.addWidget(note_icon)
+        nl.addWidget(note, 1)
+        fl.addWidget(note_frame)
 
         cl.addWidget(form, 1)
         return card
@@ -348,6 +361,9 @@ class SecurityView(QWidget):
         mode = QLineEdit.EchoMode.Normal if checked else QLineEdit.EchoMode.Password
         self.txt_pass.setEchoMode(mode)
         self.txt_confirm.setEchoMode(mode)
+        
+        icon_name = 'fa5s.eye-slash' if checked else 'fa5s.eye'
+        self.btn_show_pass.setIcon(qta.icon(icon_name, color='#7D8590'))
 
     def _on_password_changed(self, text: str):
         self.pass_strength.check_strength(text)

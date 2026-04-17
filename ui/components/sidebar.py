@@ -1,15 +1,16 @@
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QPushButton
-from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, pyqtSignal
+from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, pyqtSignal, QSize
 from PyQt6.QtGui import QFont
+import qtawesome as qta
 from services.config_service import ConfigService
 from ui.components.user_profile_widget import UserProfileWidget
 
 NAV_ITEMS = [
-    ("backup",   "Backups",         "⊞"),
-    ("import",   "Import / Export", "⇄"),
-    ("security", "Seguridad",       "⚿"),
-    ("monitor",  "Monitoreo",       "◎"),
-    ("settings", "Configuración",   "⚙"),
+    ("backup",   "Backups",         "fa5s.hdd"),
+    ("import",   "Import / Export", "fa5s.exchange-alt"),
+    ("security", "Seguridad",       "fa5s.shield-alt"),
+    ("monitor",  "Monitoreo",       "fa5s.chart-line"),
+    ("settings", "Configuración",   "fa5s.cog"),
 ]
 
 class Sidebar(QFrame):
@@ -40,15 +41,17 @@ class Sidebar(QFrame):
         h_layout.setContentsMargins(16, 0, 12, 0)
         h_layout.setSpacing(10)
 
-        self.logo_mark = QLabel("●")
+        self.logo_mark = QLabel()
+        self.logo_mark.setPixmap(qta.icon('fa5s.database', color='#58A6FF').pixmap(20, 20))
         self.logo_mark.setObjectName("logoMark")
-        self.logo_mark.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
 
         self.app_title = QLabel("JuanDB")
         self.app_title.setObjectName("appTitle")
         self.app_title.setFont(QFont("Segoe UI", 13, QFont.Weight.DemiBold))
 
-        self.btn_toggle = QPushButton("‹")
+        self.btn_toggle = QPushButton()
+        self.btn_toggle.setIcon(qta.icon('fa5s.chevron-left', color='#7D8590'))
+        self.btn_toggle.setIconSize(QSize(12, 12))
         self.btn_toggle.setObjectName("toggleBtn")
         self.btn_toggle.setFixedSize(26, 26)
         self.btn_toggle.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -75,15 +78,17 @@ class Sidebar(QFrame):
         self.section_label.setContentsMargins(16, 0, 0, 8)
         nav_layout.addWidget(self.section_label)
 
-        for i, (key, label, icon) in enumerate(NAV_ITEMS):
-            btn = QPushButton(f"  {icon}   {label}")
+        for i, (key, label, icon_name) in enumerate(NAV_ITEMS):
+            btn = QPushButton(f"  {label}")
+            btn.setIcon(qta.icon(icon_name, color='#7D8590'))
+            btn.setIconSize(QSize(18, 18))
             btn.setObjectName("navBtn")
             btn.setCheckable(True)
             btn.setFont(QFont("Segoe UI", 12))
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setFixedHeight(36)
-            btn.setProperty("abbr", icon)
-            btn.setProperty("full_label", f"  {icon}   {label}")
+            btn.setProperty("icon_name", icon_name)
+            btn.setProperty("label_text", label)
             btn.clicked.connect(lambda checked, idx=i, title=label: self._on_nav_clicked(idx, title))
             self.nav_buttons.append(btn)
             nav_layout.addWidget(btn)
@@ -143,20 +148,20 @@ class Sidebar(QFrame):
 
         if self.sidebar_expanded:
             target = self.sidebar_width
-            self.btn_toggle.setText("‹")
+            self.btn_toggle.setIcon(qta.icon('fa5s.chevron-left', color='#7D8590'))
             self.app_title.show()
             self.section_label.show()
             self.profile_widget.show()
             for btn in self.nav_buttons:
-                btn.setText(btn.property("full_label"))
+                btn.setText(f"  {btn.property('label_text')}")
         else:
             target = self.sidebar_collapsed_width
-            self.btn_toggle.setText("›")
+            self.btn_toggle.setIcon(qta.icon('fa5s.chevron-right', color='#7D8590'))
             self.app_title.hide()
             self.section_label.hide()
             self.profile_widget.hide()
             for btn in self.nav_buttons:
-                btn.setText(f"  {btn.property('abbr')}")
+                btn.setText("")
 
         self.anim.setEndValue(target)
         anim2.setEndValue(target)

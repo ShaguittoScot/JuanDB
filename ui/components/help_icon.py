@@ -3,16 +3,18 @@ help_icon.py — Componente de ícono de ayuda contextual.
 Muestra un ícono ⓘ interactivo con un tooltip personalizado.
 """
 from PyQt6.QtWidgets import QPushButton, QToolTip
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtCore import Qt, QPoint, QSize
 from PyQt6.QtGui import QFont, QCursor
+import qtawesome as qta
 
 
 class HelpIcon(QPushButton):
     def __init__(self, tooltip_text: str, parent=None):
-        super().__init__("ⓘ", parent)
+        super().__init__(parent)
         self.tooltip_text = tooltip_text
         
-        self.setFont(QFont("Segoe UI", 16))
+        self.setIcon(qta.icon('fa5s.info-circle', color='#7D8590'))
+        self.setIconSize(QSize(20, 20))
         self.setObjectName("helpIconBtn")
         
         self.setToolTip(self.tooltip_text)

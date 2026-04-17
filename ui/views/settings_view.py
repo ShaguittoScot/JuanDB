@@ -17,9 +17,9 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtGui import QFont, QCursor
-
 from ui.components.server_status_checker import ServerStatusChecker
 from ui.components.help_icon import HelpIcon
+import qtawesome as qta
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -366,9 +366,9 @@ class SettingsView(QWidget):
     settings_saved = pyqtSignal(dict)   # Emite el diccionario de configuración
 
     _CATEGORIES = [
-        ("⊛", "General"),
-        ("◈", "Interfaz"),
-        ("⊚", "Base de Datos"),
+        ("fa5s.cog",      "General"),
+        ("fa5s.palette",  "Interfaz"),
+        ("fa5s.database", "Base de Datos"),
     ]
 
     def __init__(self, parent=None):
@@ -410,8 +410,9 @@ class SettingsView(QWidget):
         self.cat_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.cat_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        for icon, label in self._CATEGORIES:
-            item = QListWidgetItem(f"  {icon}   {label}")
+        for icon_name, label in self._CATEGORIES:
+            item = QListWidgetItem(f"   {label}")
+            item.setIcon(qta.icon(icon_name, color='#7D8590'))
             item.setFont(QFont("Segoe UI", 12))
             self.cat_list.addItem(item)
 
@@ -443,10 +444,19 @@ class SettingsView(QWidget):
         lay.setContentsMargins(24, 0, 24, 0)
         lay.setSpacing(10)
 
-        # Feedback de guardado
-        self._lbl_saved = QLabel("")
-        self._lbl_saved.setFont(QFont("Segoe UI", 12))
-        self._lbl_saved.setProperty("class", "text-SUCCESS".lower())
+        # Feedback de guardado (Refactorizado con icono)
+        self.feedback_container = QWidget()
+        fl = QHBoxLayout(self.feedback_container)
+        fl.setContentsMargins(0, 0, 0, 0)
+        fl.setSpacing(8)
+        
+        self._lbl_feedback_icon = QLabel()
+        self._lbl_feedback_text = QLabel("")
+        self._lbl_feedback_text.setFont(QFont("Segoe UI", 12))
+        
+        fl.addWidget(self._lbl_feedback_icon)
+        fl.addWidget(self._lbl_feedback_text)
+        self.feedback_container.hide()
 
         # Botón restablecer
         btn_reset = QPushButton("Restablecer valores")
@@ -463,7 +473,7 @@ class SettingsView(QWidget):
         self.btn_save.setFont(QFont("Segoe UI", 12, QFont.Weight.DemiBold))
         self.btn_save.clicked.connect(self._on_save)
 
-        lay.addWidget(self._lbl_saved)
+        lay.addWidget(self.feedback_container)
         lay.addStretch()
         lay.addWidget(btn_reset)
         lay.addWidget(self.btn_save)
@@ -477,19 +487,25 @@ class SettingsView(QWidget):
     def _on_save(self):
         cfg = self.get_all_values()
         self.settings_saved.emit(cfg)
-        self._lbl_saved.setText("✓  Cambios guardados")
-        QTimer.singleShot(3000, lambda: self._lbl_saved.setText(""))
+        
+        self._lbl_feedback_icon.setPixmap(qta.icon('fa5s.check', color='#3FB950').pixmap(16, 16))
+        self._lbl_feedback_text.setText("Cambios guardados")
+        self._lbl_feedback_text.setStyleSheet("color: #3FB950;")
+        self.feedback_container.show()
+        
+        QTimer.singleShot(3000, self.feedback_container.hide)
 
     def _on_reset(self):
         self.page_general.set_values({})
         self.page_interface.set_values({})
         self.page_database.set_values({})
-        self._lbl_saved.setProperty("class", "text-INFO".lower())
-        self._lbl_saved.setText("↺  Valores restablecidos")
-        QTimer.singleShot(3000, lambda: (
-            self._lbl_saved.setText(""),
-            self._lbl_saved.setProperty("class", "text-SUCCESS".lower())
-        ))
+        
+        self._lbl_feedback_icon.setPixmap(qta.icon('fa5s.history', color='#58A6FF').pixmap(16, 16))
+        self._lbl_feedback_text.setText("Valores restablecidos")
+        self._lbl_feedback_text.setStyleSheet("color: #58A6FF;")
+        self.feedback_container.show()
+        
+        QTimer.singleShot(3000, self.feedback_container.hide)
 
     # ── API pública ───────────────────────────────────────────────────────────
 

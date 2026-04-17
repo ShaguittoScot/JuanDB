@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QPoint, pyqtSignal
 from PyQt6.QtGui import QFont, QCursor, QColor, QAction
+import qtawesome as qta
 
 
 class UserProfileWidget(QFrame):
@@ -83,8 +84,8 @@ class UserProfileWidget(QFrame):
         col.addWidget(self._role_lbl)
 
         # ── Chevron ──────────────────────────────────────────────────────────
-        chevron = QLabel("⋯")
-        chevron.setFont(QFont("Segoe UI", 14))
+        chevron = QLabel()
+        chevron.setPixmap(qta.icon('fa5s.ellipsis-h', color='#7D8590').pixmap(14, 14))
         chevron.setProperty("class", "text-hint")
         chevron.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -121,24 +122,41 @@ class UserProfileWidget(QFrame):
         menu.addSeparator()
 
         # ── Perfil ────────────────────────────────────────────────────────
-        act_profile = QAction("  👤  Perfil", menu)
+        act_profile = QAction("  Perfil", menu)
+        act_profile.setIcon(qta.icon('fa5s.user', color='#7D8590'))
         act_profile.triggered.connect(self.profile_clicked.emit)
         menu.addAction(act_profile)
 
         # ── Ajustes ───────────────────────────────────────────────────────
-        act_settings = QAction("  ⚙  Ajustes de cuenta", menu)
+        act_settings = QAction("  Ajustes de cuenta", menu)
+        act_settings.setIcon(qta.icon('fa5s.cog', color='#7D8590'))
         act_settings.triggered.connect(self.settings_clicked.emit)
         menu.addAction(act_settings)
 
         menu.addSeparator()
 
         # ── Cerrar sesión (rojo) ─────────────────────────────────────────
-        act_logout = QAction("  ⎋  Cerrar sesión", menu)
+        act_logout = QAction("  Cerrar sesión", menu)
+        act_logout.setIcon(qta.icon('fa5s.sign-out-alt', color='#F85149'))
         act_logout.triggered.connect(self.logout_clicked.emit)
 
-        # Estilo en rojo solo para este ítem
-        logout_widget = QLabel("  ⎋  Cerrar sesión")
-        logout_widget.setFont(QFont("Segoe UI", 13))
+        # Widget personalizado para el item de logout (para tener el color rojo y el icono juntos)
+        logout_widget = QWidget()
+        lw_lay = QHBoxLayout(logout_widget)
+        lw_lay.setContentsMargins(12, 6, 16, 6)
+        lw_lay.setSpacing(10)
+        
+        logout_icon = QLabel()
+        logout_icon.setPixmap(qta.icon('fa5s.sign-out-alt', color='#F85149').pixmap(14, 14))
+        
+        logout_text = QLabel("Cerrar sesión")
+        logout_text.setFont(QFont("Segoe UI", 13))
+        logout_text.setStyleSheet("color: #F85149;") # Rojo
+        
+        lw_lay.addWidget(logout_icon)
+        lw_lay.addWidget(logout_text)
+        lw_lay.addStretch()
+
         logout_widget.setObjectName("userLogoutItem")
         logout_widget.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         logout_widget.mousePressEvent = lambda _: (menu.close(), self.logout_clicked.emit())
