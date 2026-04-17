@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
     QComboBox, QLineEdit, QPushButton, QProgressBar,
     QCheckBox, QWidget, QSizePolicy
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QFont, QCursor
 import qtawesome as qta
 
@@ -68,6 +68,21 @@ class BackupFormCard(QFrame):
         db_group = self._input_group(self.combo_db, self.btn_refresh)
         main.addLayout(self._field_row('fa5s.database', db_group))
 
+        # ── Nota de Permisos (Dinámica) ─────────────────────────────────
+        self.lbl_permission_note = QLabel("Acceso limitado: Solo lectura")
+        self.lbl_permission_note.setFont(QFont("Segoe UI", 10))
+        self.lbl_permission_note.setStyleSheet(f"""
+            QLabel {{
+                color: #f59e0b;
+                background-color: rgba(245, 158, 11, 0.1);
+                border: 1px solid rgba(245, 158, 11, 0.3);
+                border-radius: 4px;
+                padding: 4px 10px;
+            }}
+        """)
+        self.lbl_permission_note.setVisible(False)
+        main.addWidget(self.lbl_permission_note)
+
         # ── Directorio de destino ────────────────────────────────────────
         main.addWidget(self._field_label("Directorio de destino"))
 
@@ -78,8 +93,40 @@ class BackupFormCard(QFrame):
         self.btn_select_dir.setObjectName("inputGroupBtn")
         self.btn_select_dir.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
+        # Botón circular para abrir carpeta
+        self.btn_open_folder = QPushButton()
+        self.btn_open_folder.setIcon(qta.icon('fa5s.folder-open', color='#7D8590'))
+        self.btn_open_folder.setFixedSize(36, 36)
+        self.btn_open_folder.setIconSize(QSize(16, 16))
+        self.btn_open_folder.setToolTip("Abrir carpeta")
+        self.btn_open_folder.setEnabled(False)
+        self.btn_open_folder.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.btn_open_folder.setStyleSheet("""
+            QPushButton {
+                background-color: #1C2333;
+                border: 1px solid #30363D;
+                border-radius: 8px;
+                color: #7D8590;
+            }
+            QPushButton:hover:!disabled {
+                background-color: #242e42;
+                border-color: #3B82F6;
+                color: #3B82F6;
+            }
+            QPushButton:disabled {
+                opacity: 0.4;
+            }
+        """)
+
         dir_group = self._input_group(self.path_input, self.btn_select_dir)
-        main.addLayout(self._field_row('fa5s.folder-open', dir_group))
+        
+        # Agregar botón circular a la derecha
+        dir_wrapper = QHBoxLayout()
+        dir_wrapper.setSpacing(8)
+        dir_wrapper.setContentsMargins(0, 0, 0, 0)
+        dir_wrapper.addLayout(self._field_row('fa5s.folder-open', dir_group), 1)
+        dir_wrapper.addWidget(self.btn_open_folder)
+        main.addLayout(dir_wrapper)
 
         # ── Nombre del archivo (opcional) ────────────────────────────────
         main.addWidget(self._field_label("Nombre del archivo  ·  opcional"))

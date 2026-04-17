@@ -41,6 +41,23 @@ class TopBar(QFrame):
         nav_col_layout.addWidget(sep)
         nav_col_layout.addWidget(self.current_module_label)
 
+        # Badge de Modo Avanzado (God Mode)
+        self.badge_advanced = QLabel("MODO AVANZADO")
+        self.badge_advanced.setObjectName("advancedModeBadge")
+        self.badge_advanced.setFont(QFont("Consolas", 10, QFont.Weight.Bold))
+        self.badge_advanced.setStyleSheet("""
+            QLabel#advancedModeBadge {
+                color: #FF007C;
+                border: 1px solid #FF007C;
+                background: transparent;
+                padding: 2px 10px;
+                border-radius: 4px;
+                margin-right: 15px;
+            }
+        """)
+        self.badge_advanced.setToolTip("El Modo Avanzado está activo. Las protecciones de sistema están desactivadas.")
+        self.badge_advanced.hide() # Oculto por defecto
+
         # Botón de tema
         self.btn_theme_toggle = QPushButton("Claro")
         self.btn_theme_toggle.setObjectName("themeToggleBtn")
@@ -53,6 +70,7 @@ class TopBar(QFrame):
 
         tb_layout.addWidget(nav_col)
         tb_layout.addStretch()
+        tb_layout.addWidget(self.badge_advanced)
         tb_layout.addWidget(self.btn_theme_toggle)
 
     def set_module(self, title: str):
@@ -71,3 +89,7 @@ class TopBar(QFrame):
         self.btn_theme_toggle.setText(btn_text)
         self.btn_theme_toggle.setIcon(qta.icon(icon_name, color=color))
         self.theme_changed.emit(self.theme_mode)
+
+    def set_advanced_mode_visible(self, visible: bool):
+        """Muestra u oculta el badge de modo avanzado."""
+        self.badge_advanced.setVisible(visible)

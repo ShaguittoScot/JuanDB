@@ -101,6 +101,14 @@ class TransferView(QWidget):
         th_lay.addWidget(term_title)
         th_lay.addStretch()
 
+        # Botón "Ver archivo" para abrir carpeta
+        self.btn_open_result = QPushButton("📁 Ver archivo")
+        self.btn_open_result.setObjectName("btnSecondary")
+        self.btn_open_result.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.btn_open_result.setEnabled(False)
+        self.btn_open_result.setToolTip("Abrir la carpeta con el archivo generado")
+        th_lay.addWidget(self.btn_open_result)
+
         clr_btn = QPushButton("Limpiar")
         clr_btn.setObjectName("btnSecondary")
         clr_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
@@ -216,7 +224,12 @@ class TransferView(QWidget):
         cl.addLayout(self._field_row('fa5s.file-export', self.format_exp))
 
         cl.addWidget(self._lbl("Carpeta de destino"))
-        self.file_selector_exp = FileSelector("Seleccionar ruta de destino...", mode="directory")
+        self.file_selector_exp = FileSelector(
+            "Seleccionar archivo de exportación...",
+            mode="save",
+            filter="CSV Files (*.csv);;JSON Files (*.json);;SQL Files (*.sql);;All Files (*)",
+            dialog_title="Guardar Archivo Exportado"
+        )
         cl.addLayout(self._field_row('fa5s.folder-open', self.file_selector_exp))
 
         cl.addSpacing(24)
@@ -247,7 +260,12 @@ class TransferView(QWidget):
         cl.addLayout(self._field_row('fa5s.file-import', self.format_imp))
 
         cl.addWidget(self._lbl("Archivo de origen"))
-        self.file_selector_imp = FileSelector("Seleccionar archivo...", mode="file")
+        self.file_selector_imp = FileSelector(
+            "Seleccionar archivo...",
+            mode="file",
+            filter="CSV Files (*.csv);;JSON Files (*.json);;SQL Files (*.sql);;All Files (*)",
+            dialog_title="Seleccionar Archivo para Importar"
+        )
         cl.addLayout(self._field_row('fa5s.file', self.file_selector_imp))
 
         cl.addWidget(self._lbl("Base de datos destino"))

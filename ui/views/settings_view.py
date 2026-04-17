@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QFrame, QLabel, QLineEdit,
     QPushButton, QCheckBox, QComboBox, QSlider, QSpinBox,
     QListWidget, QListWidgetItem, QStackedWidget, QFileDialog,
-    QSizePolicy, QAbstractItemView
+    QSizePolicy, QAbstractItemView, QMessageBox
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtGui import QFont, QCursor
@@ -141,7 +141,32 @@ class _GeneralPage(QWidget):
         self.chk_autoconnect.setChecked(True)
 
         root.addWidget(sec_start)
+
+        # ── Sección: Avanzado ────────────────────────────────────────────────
+        sec_adv = _section("Avanzado")
+        adv = sec_adv._body
+        
+        self.chk_advanced_mode = QCheckBox("Activar Modo Avanzado (God Mode)")
+        self.chk_advanced_mode.setFont(QFont("Segoe UI", 12))
+        self.chk_advanced_mode.setProperty("class", "text-adaptive")
+        self.chk_advanced_mode.clicked.connect(self._on_advanced_mode_clicked)
+        adv.addWidget(self.chk_advanced_mode)
+        adv.addWidget(_hint("Desactiva los filtros de seguridad y permite manipular objetos del sistema."))
+        
+        root.addWidget(sec_adv)
         root.addStretch()
+
+    def _on_advanced_mode_clicked(self, checked):
+        if checked:
+            reply = QMessageBox.warning(
+                self, "¡Atención!",
+                "¡Advertencia! El Modo Avanzado permite modificar archivos críticos del sistema SQL. "
+                "¿Deseas continuar bajo tu propio riesgo?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            if reply == QMessageBox.StandardButton.No:
+                self.chk_advanced_mode.setChecked(False)
 
     def _browse_path(self):
         d = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta de respaldos")
@@ -154,6 +179,7 @@ class _GeneralPage(QWidget):
             "start_minimized":  self.chk_minimized.isChecked(),
             "autoconnect":   self.chk_autoconnect.isChecked(),
             "check_updates": self.chk_check_update.isChecked(),
+            "modo_avanzado": self.chk_advanced_mode.isChecked(),
         }
 
     def set_values(self, cfg: dict):
@@ -161,6 +187,7 @@ class _GeneralPage(QWidget):
         self.chk_minimized.setChecked(cfg.get("start_minimized", False))
         self.chk_autoconnect.setChecked(cfg.get("autoconnect", True))
         self.chk_check_update.setChecked(cfg.get("check_updates", False))
+        self.chk_advanced_mode.setChecked(cfg.get("modo_avanzado", False))
 
 
 # ═════════════════════════════════════════════════════════════════════════════

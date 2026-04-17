@@ -51,3 +51,8 @@ class ConfigService:
             "password": cfg.get("password", "")
         }
 
+    @staticmethod
+    def is_advanced_mode() -> bool:
+        cfg = ConfigService.load_config()
+        return bool(cfg.get("modo_avanzado", False))
+

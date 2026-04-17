@@ -23,16 +23,11 @@ class SecurityService:
             
         try:
             cursor = conn.cursor()
-            # Escapar comillas en usuario/password para evitar inyección simple. 
-            # (Aunque execute paramétrico no soporta DDL/DCL en todos los drivers).
             username_safe = username.replace("'", "''")
             password_safe = password.replace("'", "''")
             host_safe = host.replace("'", "''")
             
-            # Crear usuario
             cursor.execute(f"CREATE USER '{username_safe}'@'{host_safe}' IDENTIFIED BY '{password_safe}'")
-            # Otorgar permisos base (para un uso genérico, a veces es GRANT ALL, o GRANT USAGE)
-            # Para la demo, dejaremos GRANT USAGE para que al menos se cree correctamente.
             cursor.execute(f"GRANT USAGE ON *.* TO '{username_safe}'@'{host_safe}'")
             cursor.execute("FLUSH PRIVILEGES")
             
@@ -62,6 +57,63 @@ class SecurityService:
             return True
         except Exception as e:
             raise Exception(f"Fallo al eliminar: {str(e)}")
+        finally:
+            if conn:
+                conn.close()
+
+    @staticmethod
+    def get_user_grants(username: str, host: str) -> list:
+        """Obtiene la lista de privilegios actuales de un usuario."""
+        conn = get_connection()
+        if not conn:
+            raise Exception("No se pudo conectar.")
+        try:
+            cursor = conn.cursor()
+            cursor.execute(f"SHOW GRANTS FOR '{username}'@'{host}'")
+            grants = cursor.fetchall()
+            return [g[0] for g in grants]
+        finally:
+            if conn:
+                conn.close()
+
+    @staticmethod
+    def update_user_privileges(username: str, host: str, privileges: list, scope: str = "*.*") -> bool:
+        """Construye y ejecuta la sentencia GRANT para actualizar privilegios."""
+        conn = get_connection()
+        if not conn:
+            raise Exception("Error de conexión.")
+        try:
+            cursor = conn.cursor()
+            username_safe = username.replace("'", "''")
+            host_safe = host.replace("'", "''")
+            
+            # 1. Limpiar privilegios existentes para asegurar sobreescritura limpia
+            try:
+                cursor.execute(f"REVOKE ALL PRIVILEGES, GRANT OPTION FROM '{username_safe}'@'{host_safe}'")
+            except:
+                pass 
+            
+            # 2. Aplicar nuevos privilegios si hay alguno
+            if privileges:
+                priv_str = ", ".join(privileges)
+                cursor.execute(f"GRANT {priv_str} ON {scope} TO '{username_safe}'@'{host_safe}'")
+            
+            cursor.execute("FLUSH PRIVILEGES")
+            return True
+        except Exception as e:
+            raise Exception(f"Fallo al actualizar privilegios: {str(e)}")
+        finally:
+            if conn:
+                conn.close()
+
+    @staticmethod
+    def flush_privileges():
+        """Refresca la tabla de privilegios del servidor."""
+        conn = get_connection()
+        if not conn: return
+        try:
+            cursor = conn.cursor()
+            cursor.execute("FLUSH PRIVILEGES")
         finally:
             if conn:
                 conn.close()

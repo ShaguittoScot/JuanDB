@@ -1,6 +1,11 @@
 from PyQt6.QtCore import QObject, QThread, pyqtSignal
 from PyQt6.QtWidgets import QTableWidgetItem, QMessageBox
 from services.security_service import SecurityService
+from ui.dialogs.edit_privileges_dialog import EditPrivilegesDialog
+from utils.database_sanitizer import DatabaseSanitizer
+from ui.colors import DARK_THEME as APP_COLORS
+import qtawesome as qta
+from PyQt6.QtGui import QColor, QBrush
 
 class FetchUsersWorker(QThread):
     finished = pyqtSignal(list)
@@ -48,6 +53,7 @@ class SecurityController(QObject):
         self.view.btn_refresh.clicked.connect(self.load_users)
         self.view.btn_create.clicked.connect(self.create_user)
         self.view.btn_delete.clicked.connect(self.delete_user)
+        self.view.btn_edit.clicked.connect(self.edit_user_privileges)
         
         self.load_users()
 
@@ -61,16 +67,29 @@ class SecurityController(QObject):
         self.fetch_worker.start()
 
     def on_users_loaded(self, users):
-        self.view.table.setRowCount(len(users))
-        for row, u in enumerate(users):
-            user_item = QTableWidgetItem(u.get("User", ""))
-            host_item = QTableWidgetItem(u.get("Host", ""))
-            priv_item = QTableWidgetItem("N/A")  # Placeholder para privilegios
+        # Aplicar filtrado mediante Sanitizer
+        filtered_users = DatabaseSanitizer.filter_users(users)
+        
+        self.view.table.setRowCount(len(filtered_users))
+        for row, u in enumerate(filtered_users):
+            username = u.get("User", "")
+            host = u.get("Host", "")
+            
+            user_item = QTableWidgetItem(username)
+            host_item = QTableWidgetItem(host)
+            priv_item = QTableWidgetItem("Superusuario" if username.lower() == "root" else "Estándar")
+            
+            # Tratamiento especial para root
+            if username.lower() == "root":
+                user_item.setIcon(qta.icon('fa5s.shield-alt', color=APP_COLORS['ERROR']))
+                user_item.setForeground(QBrush(QColor(APP_COLORS['ERROR'])))
+                user_item.setToolTip("Superusuario (Root): Acceso total al servidor.")
+            
             self.view.table.setItem(row, 0, user_item)
             self.view.table.setItem(row, 1, host_item)
             self.view.table.setItem(row, 2, priv_item)
             
-        self.view.user_count_label.setText(f"{len(users)} usuarios")
+        self.view.user_count_label.setText(f"{len(filtered_users)} usuarios")
         self.view.show_message("Lista de usuarios actualizada", "success")
 
     def on_error(self, err):
@@ -129,6 +148,20 @@ class SecurityController(QObject):
         user = self.view.table.item(row, 0).text()
         host = self.view.table.item(row, 1).text()
         
+        # Validación de seguridad del Sanitizer
+        if not DatabaseSanitizer.is_safe_user(user):
+            QMessageBox.critical(self.view, "Acceso Denegado", 
+                                f"No se permite eliminar al usuario de sistema '{user}' sin Modo Avanzado.")
+            return
+        
+        if user.lower() == "root":
+            QMessageBox.warning(self.view, "Acción Protegida", 
+                                "No se recomienda eliminar al usuario root, ya que podrías perder acceso al servidor.")
+            # Si el usuario insiste y NO está en modo avanzado bloqueamos?
+            # Por ahora lo permitimos si confirma el diálogo standard abajo, pero el Sanitizer ya lo filtraría si quisiéramos.
+            # Según requerimiento: "Filtro Dinámico: Si modo_avanzado es False, aplica el filtro... Si es True, muestra todo."
+            # Como root NO se filtra (según requerimiento 1), permitimos el flujo pero con advertencias.
+        
         reply = QMessageBox.question(
             self.view, "Confirmar Baja",
             f"¿Estás completamente seguro de revocar el acceso y eliminar a '{user}'@'{host}'?",
@@ -154,3 +187,38 @@ class SecurityController(QObject):
             self.load_users()
         else:
             self.view.show_message(f"❌ {msg}", "error")
+
+    def edit_user_privileges(self):
+        """Abre el diálogo de edición de privilegios para el usuario seleccionado."""
+        items = self.view.table.selectedItems()
+        if not items: return
+        
+        row = items[0].row()
+        user = self.view.table.item(row, 0).text()
+        host = self.view.table.item(row, 1).text()
+        
+        # 1. Obtener privilegios actuales
+        self.view.show_message(f"Consultando privilegios de '{user}'...", "info")
+        try:
+            grants = SecurityService.get_user_grants(user, host)
+            
+            # 2. Abrir diálogo
+            dialog = EditPrivilegesDialog(user, host, current_grants=grants, parent=self.view)
+            if dialog.exec() == EditPrivilegesDialog.DialogCode.Accepted:
+                privs = dialog.get_selected_privileges()
+                scope = dialog.get_scope()
+                
+                # 3. Aplicar cambios
+                self.view.show_message(f"⌛ Aplicando privilegios a '{user}'...", "info")
+                SecurityService.update_user_privileges(user, host, privs, scope)
+                
+                # Feedback visual solicitado
+                success_msg = f"Privilegios actualizados para {user}@{host}"
+                self.view.show_message(f"✅ {success_msg}", "success")
+                self.load_users()
+                
+                # Sincronizar con el explorador si es necesario (puedess emitir una señal global)
+                # self.refresh_explorer_signal.emit() 
+        except Exception as e:
+            self.view.show_message(f"❌ Error: {str(e)}", "error")
+            QMessageBox.critical(self.view, "Error de Privilegios", str(e))

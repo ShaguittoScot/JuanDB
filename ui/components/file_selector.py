@@ -11,10 +11,11 @@ class FileSelector(QWidget):
     path_changed = pyqtSignal(str)
 
     def __init__(self, placeholder: str = "Seleccionar...", mode: str = "file",
-                 filter: str = "All Files (*)", parent=None):
+                 filter: str = "All Files (*)", dialog_title: str = "Seleccionar archivo", parent=None):
         super().__init__(parent)
-        self.mode   = mode     # 'file' | 'directory'
+        self.mode   = mode     # 'file' | 'directory' | 'save'
         self.filter = filter
+        self.dialog_title = dialog_title
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -67,10 +68,35 @@ class FileSelector(QWidget):
         layout.addWidget(self.browse_btn)
 
     def _browse(self):
+        """Abre el diálogo nativo del sistema según el modo configurado."""
+        options = QFileDialog.Option.ReadOnly  # Usar estilo nativo del sistema
+        
         if self.mode == "directory":
-            path = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta")
-        else:
-            path, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo", "", self.filter)
+            # Solo directorio
+            path = QFileDialog.getExistingDirectory(
+                self, 
+                self.dialog_title,
+                "",
+                options=options
+            )
+        elif self.mode == "save":
+            # Guardar archivo
+            path, _ = QFileDialog.getSaveFileName(
+                self,
+                self.dialog_title,
+                "",
+                self.filter,
+                options=options
+            )
+        else:  # "file"
+            # Abrir archivo
+            path, _ = QFileDialog.getOpenFileName(
+                self,
+                self.dialog_title,
+                "",
+                self.filter,
+                options=options
+            )
 
         if path:
             self.path_edit.setText(path)

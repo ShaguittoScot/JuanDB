@@ -23,13 +23,7 @@ class BackupView(QWidget):
         self._setup_connections()
 
     def _setup_connections(self):
-        self.btn_refresh.clicked.connect(self._on_refresh_clicked)
-        self.btn_select_dir.clicked.connect(self._on_select_directory)
-        self.btn_backup.clicked.connect(self._on_backup_clicked)
-        self.btn_refresh_restore.clicked.connect(self._on_refresh_restore)
-        self.btn_select_schema.clicked.connect(self._on_select_schema)
-        self.btn_select_data.clicked.connect(self._on_select_data)
-        self.btn_restore.clicked.connect(self._on_restore_clicked)
+        # Las conexiones se manejan en el controlador para evitar duplicidades
         self.btn_cancel.clicked.connect(self._on_cancel_backup)
 
     # ══════════════════════════════════════════════════════════════════════════
@@ -109,6 +103,8 @@ class BackupView(QWidget):
         self.custom_name       = self._form_card.custom_name
         self.btn_refresh       = self._form_card.btn_refresh
         self.btn_select_dir    = self._form_card.btn_select_dir
+        self.btn_open_folder   = self._form_card.btn_open_folder
+        self.lbl_permission_note = self._form_card.lbl_permission_note
         self.chk_compress      = self._form_card.chk_compress
         self.chk_drop_tables   = self._form_card.chk_drop_tables
         self.chk_create_db     = self._form_card.chk_create_db
@@ -356,6 +352,14 @@ class BackupView(QWidget):
         th_lay.addWidget(term_title)
         th_lay.addStretch()
 
+        # Botón "Ver archivo" para abrir carpeta
+        self.btn_open_result = QPushButton("📁 Ver archivo")
+        self.btn_open_result.setObjectName("btnSecondary")
+        self.btn_open_result.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.btn_open_result.setEnabled(False)
+        self.btn_open_result.setToolTip("Abrir la carpeta con el archivo generado")
+        th_lay.addWidget(self.btn_open_result)
+
         clr_btn = QPushButton("Limpiar")
         clr_btn.setObjectName("btnSecondary")
         clr_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
@@ -427,84 +431,21 @@ class BackupView(QWidget):
         self._log("Actualizando bases de datos disponibles...", "process")
         QTimer.singleShot(900, lambda: self._log("Lista actualizada", "success"))
 
-    def _on_select_directory(self):
-        from PyQt6.QtWidgets import QFileDialog
-        d = QFileDialog.getExistingDirectory(self, "Seleccionar directorio de backup")
-        if d:
-            self.path_input.setText(d)
-            self._log(f"Directorio seleccionado: {d}", "info")
-
-    def _on_select_schema(self):
-        from PyQt6.QtWidgets import QFileDialog
-        f, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo SQL", "", "SQL Files (*.sql)")
-        if f:
-            self.schema_input.setText(f)
-            self._log(f"Archivo SQL: {f}", "info")
-
-    def _on_select_data(self):
-        from PyQt6.QtWidgets import QFileDialog
-        f, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo de datos", "", "SQL Files (*.sql)")
-        if f:
-            self.data_input.setText(f)
-            self._log(f"Archivo de datos: {f}", "info")
-
-    def _on_backup_clicked(self):
-        if not self.path_input.text():
-            self._log("Selecciona un directorio de destino", "error"); return
-        if not self.combo_db.currentText():
-            self._log("Selecciona una base de datos", "error"); return
-
-        self.progress_bar.setVisible(True)
-        self.progress_bar.setValue(0)
-        self.btn_backup.setEnabled(False)
-        self.btn_cancel.setVisible(True)
-        self._log(f"Iniciando backup de '{self.combo_db.currentText()}'...", "process")
-        QTimer.singleShot(3000, self._sim_backup_done)
-
-    def _sim_backup_done(self):
-        self.progress_bar.setValue(100)
-        self._log(f"Backup completado en: {self.path_input.text()}", "success")
-        now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        self.stats_last_backup.setText(f"Último: {now}")
-        count = int(self.stats_backup_count.text().split(": ")[-1])
-        self.stats_backup_count.setText(f"Realizados: {count + 1}")
-        QTimer.singleShot(800, self._reset_backup_ui)
-
-    def _reset_backup_ui(self):
-        self.progress_bar.setVisible(False)
-        self.progress_bar.setValue(0)
-        self.btn_backup.setEnabled(True)
-        self.btn_cancel.setVisible(False)
-
     def _on_cancel_backup(self):
         self._log("Backup cancelado por el usuario", "warning")
-        self._reset_backup_ui()
-
-    def _on_restore_clicked(self):
-        if not self.combo_db_restore.currentText():
-            self._log("Selecciona o escribe el nombre de la BD destino", "error"); return
-        if not self.schema_input.text():
-            self._log("Selecciona el archivo SQL a restaurar", "error"); return
-        self._log(f"Iniciando restauración en '{self.combo_db_restore.currentText()}'...", "process")
-        self.progress_bar_restore.setVisible(True)
-        self.progress_bar_restore.setValue(0)
-        QTimer.singleShot(3000, lambda: (
-            self.progress_bar_restore.setValue(100),
-            self._log("Restauración completada exitosamente", "success"),
-            QTimer.singleShot(800, lambda: (
-                setattr(self.progress_bar_restore, 'visible', False),
-                self.progress_bar_restore.setVisible(False)
-            ))
-        ))
+        if hasattr(self, 'progress_bar'):
+            self.progress_bar.setVisible(False)
+            self.progress_bar.setValue(0)
+            self.btn_backup.setEnabled(True)
+            self.btn_cancel.setVisible(False)
 
     def _log(self, msg: str, msg_type: str = "info"):
-        self.log_area.append_log(msg, msg_type)
-
-    # ══════════════════════════════════════════════════════════════════════════
-    # API pública (compatibilidad con BackupController)
-    # ══════════════════════════════════════════════════════════════════════════
+        """Método interno para escribir en el log."""
+        if hasattr(self, 'log_area'):
+            self.log_area.append_log(msg, msg_type)
 
     def log_message(self, msg: str, msg_type: str = "info"):
+        """API pública para el controlador."""
         self._log(msg, msg_type)
 
     def clear_log(self):

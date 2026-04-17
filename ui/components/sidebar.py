@@ -6,6 +6,7 @@ from services.config_service import ConfigService
 from ui.components.user_profile_widget import UserProfileWidget
 
 NAV_ITEMS = [
+    ("explorer", "Explorador",      "fa5s.layer-group"),
     ("backup",   "Backups",         "fa5s.hdd"),
     ("import",   "Import / Export", "fa5s.exchange-alt"),
     ("security", "Seguridad",       "fa5s.shield-alt"),

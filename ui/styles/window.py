@@ -52,4 +52,81 @@ def get_window_style(theme: dict) -> str:
             padding: 4px 8px;
             font-size: 12px;
         }}
+
+        /* Dialog */
+        QDialog, QDialog#formCard {{
+            background-color: {theme['BG_CARD']};
+            color: {theme['TEXT_DARK']};
+        }}
+
+        /* GroupBox dentro de diálogos */
+        QDialog QGroupBox {{
+            background-color: transparent;
+            color: {theme['TEXT_MUTED']};
+            border: 1px solid {theme['BORDER']};
+            border-radius: 8px;
+            margin-top: 20px;
+            padding: 18px 12px 12px 12px;
+            font-weight: 600;
+            font-size: 12px;
+        }}
+        QDialog QGroupBox::title {{
+            subcontrol-origin: margin;
+            subcontrol-position: top left;
+            left: 12px;
+            top: -10px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            padding-left: 6px;
+            padding-right: 6px;
+            margin: 2px;
+            background-color: {theme['BG_CARD']};
+            color: {theme['TEXT_MUTED']};
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }}
+
+        /* Labels dentro de diálogos */
+        QDialog QLabel {{
+            color: {theme['TEXT_DARK']};
+            margin: 2px;
+        }}
+        QDialog QLabel[class="text-light"] {{
+            color: {theme['TEXT_LIGHT']};
+            margin: 2px;
+        }}
+        QDialog QLabel[class="text-muted"] {{
+            color: {theme['TEXT_MUTED']};
+            margin: 2px;
+        }}
+
+        /* ComboBox dentro de diálogos */
+        QDialog QComboBox {{
+            background-color: {theme['BG_ELEVATED']};
+            border: 1px solid {theme['BORDER']};
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: {theme['TEXT_DARK']};
+        }}
+        QDialog QComboBox:hover {{
+            border-color: {theme['TEXT_MUTED']};
+        }}
+        QDialog QComboBox:focus {{
+            border: 2px solid {theme['ACCENT']};
+            background-color: {theme['BG_SURFACE']};
+        }}
+
+        /* CheckBox dentro de diálogos */
+        QDialog QCheckBox {{
+            color: {theme['TEXT_DARK']};
+        }}
+        QDialog QCheckBox::indicator {{
+            border: 1.5px solid {theme['BORDER']};
+            background-color: {theme['BG_ELEVATED']};
+        }}
+        QDialog QCheckBox::indicator:checked {{
+            background-color: {theme['ACCENT']};
+            border-color: {theme['ACCENT']};
+        }}
     """
